@@ -30,10 +30,10 @@
 
 ## 📸 スクリーンショット
 
->![暗号化の例](assets/screenshot_of_encryption.png)
+>![暗号化の例](assets/encryption_example.png)
 >*暗号化の例*
 >
->![復号の例](assets/screenshot_of_decryption.png)
+>![復号の例](assets/decryption_example.png)
 >*復号の例*
 
 ---
