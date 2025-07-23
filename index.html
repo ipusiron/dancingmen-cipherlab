@@ -32,6 +32,11 @@
           placeholder="HELLO WORLD のように入力"
           oninput="encrypt()"
         ></textarea>
+        <div class="input-guide">
+          <small>※英字（A-Z）とスペースのみ入力可能です</small>
+          <small id="char-count" class="char-count">暗号化可能文字数: 0</small>
+        </div>
+        <div id="validation-feedback" class="validation-feedback"></div>
         <button onclick="encrypt()">暗号化</button>
         <div id="output" class="svg-output"></div>
         <div>

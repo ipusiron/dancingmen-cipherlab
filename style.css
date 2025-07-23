@@ -229,3 +229,34 @@ footer {
 .toast.show {
   display: block;
 }
+
+.input-guide {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.char-count {
+  font-weight: bold;
+  color: #3498db;
+}
+
+.validation-feedback {
+  display: none;
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 0.75rem;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.validation-feedback.show {
+  opacity: 1;
+}

@@ -34,11 +34,65 @@ function switchTab(tabName) {
   if (tabName === "table") generateTable();
 }
 
+function validateAndSanitizeInput(input) {
+  // 許可する文字: A-Z, a-z, スペース、改行
+  const allowedPattern = /[^A-Za-z\s\n\r]/g;
+  const invalidChars = input.match(allowedPattern);
+  
+  // 無効な文字を削除
+  const sanitized = input.replace(allowedPattern, '');
+  
+  return {
+    sanitized: sanitized,
+    hasInvalidChars: invalidChars !== null,
+    invalidChars: invalidChars ? [...new Set(invalidChars)] : [],
+    validCharCount: sanitized.replace(/[\s\n\r]/g, '').length
+  };
+}
+
+function showValidationFeedback(validationResult) {
+  const feedbackElement = document.getElementById('validation-feedback');
+  const charCountElement = document.getElementById('char-count');
+  
+  if (!feedbackElement || !charCountElement) return;
+  
+  // 文字数の更新
+  charCountElement.textContent = `暗号化可能文字数: ${validationResult.validCharCount}`;
+  
+  // エラーメッセージの表示/非表示
+  if (validationResult.hasInvalidChars) {
+    feedbackElement.textContent = `無効な文字が削除されました: ${validationResult.invalidChars.join(', ')}`;
+    feedbackElement.style.display = 'block';
+    feedbackElement.classList.add('show');
+    
+    // 3秒後にフェードアウト
+    setTimeout(() => {
+      feedbackElement.classList.remove('show');
+      setTimeout(() => {
+        feedbackElement.style.display = 'none';
+      }, 300);
+    }, 3000);
+  }
+}
+
 function encrypt() {
   const svgFolder = "assets/svg/tight/";
-  const input = document.getElementById("plaintext").value;
+  const rawInput = document.getElementById("plaintext").value;
   const outputArea = document.getElementById("output");
   const textArea = document.getElementById("ciphertext");
+  
+  // 入力をバリデーション
+  const validationResult = validateAndSanitizeInput(rawInput);
+  const input = validationResult.sanitized;
+  
+  // バリデーション結果を表示
+  showValidationFeedback(validationResult);
+  
+  // 元の入力と異なる場合は、サニタイズされた値で更新
+  if (rawInput !== input) {
+    document.getElementById("plaintext").value = input;
+  }
+  
   outputArea.innerHTML = "";
   textArea.textContent = "";
 
@@ -46,21 +100,22 @@ function encrypt() {
   let cipherText = "";
 
   for (const line of lines) {
-    const letters = line.toUpperCase().split("");
+    const letters = line.split("");
     const lineDiv = document.createElement("div");
     lineDiv.className = "svg-line";
     outputArea.appendChild(lineDiv);
 
     for (let i = 0; i < letters.length; i++) {
       const char = letters[i];
-      if (char >= 'A' && char <= 'Z') {
+      const upperChar = char.toUpperCase();
+      if ((char >= 'A' && char <= 'Z') || (char >= 'a' && char <= 'z')) {
         const next = letters[i + 1];
         const useFlag = (next === " ");
-        const filename = useFlag ? `${char}f.svg` : `${char}.svg`;
+        const filename = useFlag ? `${upperChar}f.svg` : `${upperChar}.svg`;
 
         const img = document.createElement("img");
         img.src = `${svgFolder}${filename}`;
-        img.alt = char;
+        img.alt = upperChar;
         img.title = char + (useFlag ? " (旗あり)" : "");
         lineDiv.appendChild(img);
 
