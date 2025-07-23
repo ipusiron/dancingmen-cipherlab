@@ -19,13 +19,20 @@
 
   <main>
     <!-- 暗号化パネル -->
-    <section id="encrypt-panel" class="tab-panel active">
-      <h2>🔐 暗号化</h2>
-      <label for="plaintext">平文を入力してください（A〜Zとスペースのみ）：</label>
-      <textarea id="plaintext" rows="3" placeholder="HELLO WORLD のように入力"></textarea>
-      <button onclick="encrypt()">暗号化</button>
-      <div id="output" class="svg-output"></div>
-    </section>
+<section id="encrypt-panel" class="tab-panel active">
+  <h2>🔐 暗号化</h2>
+  <label for="plaintext">平文を入力してください（A〜Zとスペースのみ）：</label>
+  <textarea id="plaintext" rows="3" placeholder="HELLO WORLD のように入力"></textarea>
+  <button onclick="encrypt()">暗号化</button>
+
+  <div id="output" class="svg-output"></div>
+
+  <div>
+    <h3>暗号文（ファイル名の列）</h3>
+    <pre id="ciphertext" class="cipher-output"></pre>
+  </div>
+</section>
+
 
     <!-- 復号パネル -->
     <section id="decrypt-panel" class="tab-panel">

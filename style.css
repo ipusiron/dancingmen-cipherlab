@@ -90,13 +90,18 @@ button:hover {
 .svg-output {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
   align-items: center;
+  gap: 0; /* 間隔なし */
+  line-height: 0; /* 行間も詰める */
 }
 
 .svg-output img {
   width: 48px;
   height: 48px;
+  margin: 0;
+  padding: 0;
+  display: inline-block;
+  vertical-align: top;
 }
 
 footer {
@@ -105,4 +110,13 @@ footer {
   padding: 1rem;
   margin-top: 2rem;
   font-size: 0.9rem;
+}
+
+.cipher-output {
+  background-color: #f4f4f4;
+  padding: 1rem;
+  font-family: monospace;
+  white-space: pre-wrap;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }

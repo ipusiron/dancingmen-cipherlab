@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="72pt" height="72pt" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2025-07-23T01:47:42.973650</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.6.3, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 72 
+L 72 72 
+L 72 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="text_1">
+    <!-- U -->
+    <g style="fill: #333333" transform="translate(21.91125 53.06625) scale(0.48 -0.48)">
+     <defs>
+      <path id="GL-DancingMen-55" d="M 2534 -384 
+L 2771 870 
+Q 2432 1491 1914 2106 
+Q 1888 1926 1875 1827 
+Q 1862 1728 1856 1677 
+Q 1843 1574 1833 1536 
+Q 1824 1498 1798 1478 
+Q 1958 1440 2048 1321 
+Q 2138 1203 2138 1056 
+Q 2138 826 1958 640 
+Q 1779 454 1485 454 
+Q 1286 454 1161 598 
+Q 1037 742 1037 934 
+Q 1037 1139 1171 1296 
+Q 1306 1453 1498 1478 
+Q 1472 1517 1472 1581 
+Q 1472 1619 1491 1722 
+Q 1530 1882 1562 2118 
+Q 1267 1869 998 1593 
+Q 730 1318 371 922 
+Q 320 864 278 829 
+Q 237 794 186 794 
+Q 134 794 80 832 
+Q 26 870 26 947 
+Q 26 1101 541 1603 
+Q 1056 2106 1626 2522 
+L 1677 2931 
+Q 1152 3059 893 3180 
+Q 634 3302 634 3443 
+Q 634 3539 752 3747 
+Q 870 3955 1248 4480 
+Q 979 4582 870 4656 
+Q 762 4730 762 4832 
+Q 762 4915 835 4960 
+Q 909 5005 998 5005 
+Q 1126 5005 1299 4937 
+Q 1472 4870 1597 4771 
+Q 1722 4672 1722 4582 
+Q 1722 4531 1664 4438 
+Q 1606 4346 1459 4147 
+Q 1178 3763 1011 3494 
+Q 1427 3283 1888 3168 
+Q 2330 3226 2797 3430 
+Q 2726 3674 2579 4058 
+Q 2509 4230 2480 4326 
+Q 2451 4422 2451 4506 
+Q 2451 4557 2524 4656 
+Q 2598 4755 2755 4832 
+Q 2912 4909 3149 4909 
+Q 3277 4909 3337 4825 
+Q 3398 4742 3398 4678 
+Q 3398 4602 3276 4547 
+Q 3155 4493 2874 4429 
+Q 3034 3955 3104 3712 
+Q 3174 3469 3174 3354 
+Q 3174 3258 3088 3190 
+Q 3002 3123 2746 3056 
+Q 2490 2989 1984 2906 
+L 1952 2509 
+Q 2387 2061 2774 1552 
+Q 3162 1043 3162 845 
+Q 3162 749 3072 672 
+L 3014 429 
+L 3571 371 
+L 3450 -454 
+L 2534 -384 
+z
+M 1549 742 
+Q 1658 742 1754 803 
+Q 1850 864 1850 1005 
+Q 1850 1094 1786 1161 
+Q 1722 1229 1613 1229 
+Q 1517 1229 1427 1168 
+Q 1338 1107 1338 966 
+Q 1338 864 1398 803 
+Q 1459 742 1549 742 
+z
+M 3264 134 
+L 2976 154 
+L 2912 -141 
+L 3213 -166 
+L 3264 134 
+z
+" transform="scale(0.015625)"/>
+     </defs>
+     <use xlink:href="#GL-DancingMen-55"/>
+    </g>
+   </g>
+  </g>
+ </g>
+</svg>
