@@ -153,7 +153,16 @@ function removeLastDecryption() {
   const imageLine = document.getElementById("decrypt-image-line");
   const output = document.getElementById("decrypt-output");
   if (imageLine.lastChild) imageLine.removeChild(imageLine.lastChild);
-  output.textContent = output.textContent.slice(0, -1).trimEnd();
+
+  // 現在の出力を取得
+  let current = output.textContent;
+
+  // 末尾が空白なら空白 + 直前の1文字削除、そうでなければ1文字だけ削除
+  if (current.endsWith(" ")) {
+    output.textContent = current.slice(0, -2);
+  } else {
+    output.textContent = current.slice(0, -1);
+  }
 }
 
 function copyDecryption() {
