@@ -1,65 +1,115 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DancingMen CipherLab</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <header>
-    <h1>DancingMen CipherLab</h1>
-    <p>シャーロック・ホームズの「踊る人形」暗号を体験できるツールです。</p>
-  </header>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DancingMen CipherLab</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>DancingMen CipherLab</h1>
+      <p>シャーロック・ホームズの「踊る人形」暗号を体験できるツールです。</p>
+    </header>
 
-  <nav class="tab-menu">
-    <button class="tab-button active" onclick="switchTab('encrypt')">🔐 暗号化</button>
-    <button class="tab-button" onclick="switchTab('decrypt')">🥉 復号</button>
-    <button class="tab-button" onclick="switchTab('table')">📓 置換表</button>
-  </nav>
+    <nav class="tab-menu">
+      <button class="tab-button active" onclick="switchTab('encrypt')">
+        🔐 暗号化
+      </button>
+      <button class="tab-button" onclick="switchTab('decrypt')">🔓 復号</button>
+      <button class="tab-button" onclick="switchTab('table')">📓 置換表</button>
+    </nav>
 
-  <main>
-    <section id="encrypt-panel" class="tab-panel active">
-      <h2>🔐 暗号化</h2>
-      <label for="plaintext">平文を入力してください（A〜Zとスペースのみ）：</label>
-      <textarea id="plaintext" rows="3"
-        placeholder="HELLO WORLD のように入力"
-        oninput="encrypt()"></textarea>
-      <button onclick="encrypt()">暗号化</button>
-      <div id="output" class="svg-output"></div>
-      <div>
-        <h3>暗号文（ファイル名の列）</h3>
-        <pre id="ciphertext" class="cipher-output"></pre>
-      </div>
-    </section>
+    <main>
+      <section id="encrypt-panel" class="tab-panel active">
+        <h2>🔐 暗号化</h2>
+        <label for="plaintext"
+          >平文を入力してください（A〜Zとスペースのみ）：</label
+        >
+        <textarea
+          id="plaintext"
+          rows="3"
+          placeholder="HELLO WORLD のように入力"
+          oninput="encrypt()"
+        ></textarea>
+        <button onclick="encrypt()">暗号化</button>
+        <div id="output" class="svg-output"></div>
+        <div>
+          <h3>暗号文（ファイル名の列）</h3>
+          <pre id="ciphertext" class="cipher-output"></pre>
+        </div>
+      </section>
 
-    <section id="decrypt-panel" class="tab-panel">
-      <h2>🥉 復号</h2>
-      <p>復号機能は現在開発中です。</p>
-    </section>
+      <section id="decrypt-panel" class="tab-panel">
+        <h2>🔓 復号</h2>
+        <p>
+          下の人形から順にクリックして、対応する文字を復元していってください。
+        </p>
 
-    <section id="table-panel" class="tab-panel">
-      <h2>📓 置換表</h2>
-      <p>以下はアルファベットと踊る人形の対応表です（平文文字がアルファベット、暗号化文字が人形文字）。<br><strong>クリックすると拡大表示されます。</strong></p>
-      <div class="key-table"></div>
-      <h3>🏱 旗ありの意味</h3>
-      <p>「旗あり」の人形は、その直後に <strong>空白が来る</strong> ことを示します。<br>
-        たとえば "HELLO WORLD" では、"O" の次がスペースなので "Of.svg"（旗付き）が使われます。</p>
-      <p>サンプル：<img src="assets/svg/padded/Of.svg" alt="Of" style="width:48px; vertical-align:middle;"> は "O" + 空白</p>
-    </section>
-  </main>
+        <div class="decrypt-input-area">
+          <p>▼ 以下の人形をクリックして復号対象に追加：</p>
+          <div id="decrypt-buttons" class="key-table"></div>
 
-  <!-- モーダル -->
-  <div id="modal" class="modal" onclick="closeModal()">
-    <img id="modal-img" class="modal-img" src="" alt="">
-  </div>
+          <h3>入力した人形：</h3>
+          <div id="decrypt-image-line" class="svg-line"></div>
+        </div>
 
-  <footer>
-    <div class="footer">
-      🔗 GitHubリポジトリはこちら（<a href="https://github.com/ipusiron/dancingmen-cipherlab" target="_blank">ipusiron/dancingmen-cipherlab</a>）
+        <div class="decrypt-control-area" style="margin-top: 1rem">
+          <button onclick="clearDecryption()">クリア</button>
+          <button onclick="removeLastDecryption()">1文字削除</button>
+        </div>
+
+        <div class="decrypt-output-area" style="margin-top: 1rem">
+          <h3>復号結果：</h3>
+          <pre id="decrypt-output" class="cipher-output"></pre>
+          <button onclick="copyDecryption()">復号結果をコピー</button>
+        </div>
+		<div id="copy-toast" class="toast">
+          復号結果をコピーしました
+        </div>
+      </section>
+
+      <section id="table-panel" class="tab-panel">
+        <h2>📓 置換表</h2>
+        <p>
+          以下はアルファベットと踊る人形の対応表です（平文文字がアルファベット、暗号化文字が人形文字）。<br /><strong
+            >クリックすると拡大表示されます。</strong
+          >
+        </p>
+        <div class="key-table"></div>
+        <h3>🏱 旗ありの意味</h3>
+        <p>
+          「旗あり」の人形は、その直後に
+          <strong>空白が来る</strong> ことを示します。<br />
+          たとえば "HELLO WORLD" では、"O" の次がスペースなので
+          "Of.svg"（旗付き）が使われます。
+        </p>
+        <p>
+          サンプル：<img
+            src="assets/svg/padded/Of.svg"
+            alt="Of"
+            style="width: 48px; vertical-align: middle"
+          />
+          は "O" + 空白
+        </p>
+      </section>
+    </main>
+
+    <!-- モーダル -->
+    <div id="modal" class="modal" onclick="closeModal()">
+      <img id="modal-img" class="modal-img" src="" alt="" />
     </div>
-  </footer>
 
-  <script src="script.js"></script>
-</body>
+    <footer>
+      <div class="footer">
+        🔗 GitHubリポジトリはこちら（<a
+          href="https://github.com/ipusiron/dancingmen-cipherlab"
+          target="_blank"
+          >ipusiron/dancingmen-cipherlab</a
+        >）
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
 </html>

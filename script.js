@@ -1,3 +1,5 @@
+// script.js
+
 document.addEventListener("DOMContentLoaded", () => {
   document.body.addEventListener("click", (e) => {
     if (e.target.matches(".key-entry img")) {
@@ -5,16 +7,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const modalImg = document.getElementById("modal-img");
       modalImg.src = e.target.src;
       modalImg.alt = e.target.alt;
-
       modalImg.removeAttribute("width");
       modalImg.removeAttribute("height");
-
-      // 明示的にクラス追加してスタイルを強制
       modalImg.className = "modal-img zoomed";
-
       modal.classList.add("show");
     }
   });
+
+  generateDecryptButtons();
 });
 
 function closeModal() {
@@ -31,9 +31,7 @@ function switchTab(tabName) {
   document.getElementById(`${tabName}-panel`).classList.add("active");
   document.querySelector(`.tab-button[onclick="switchTab('${tabName}')"]`).classList.add("active");
 
-  if (tabName === "table") {
-    generateTable();
-  }
+  if (tabName === "table") generateTable();
 }
 
 function encrypt() {
@@ -77,15 +75,12 @@ function encrypt() {
 function generateTable() {
   const container = document.querySelector(".key-table");
   if (!container) return;
-
   const svgFolder = "assets/svg/padded/";
   container.innerHTML = "";
-
   for (let i = 0; i < 26; i++) {
     const ch = String.fromCharCode(65 + i);
     const div = document.createElement("div");
     div.className = "key-entry";
-
     div.innerHTML = `
       <div class="char-label">${ch}</div>
       <img src="${svgFolder}${ch}.svg" alt="${ch}" title="${ch}">
@@ -93,4 +88,81 @@ function generateTable() {
     `;
     container.appendChild(div);
   }
+}
+
+function generateDecryptButtons() {
+  const container = document.getElementById("decrypt-buttons");
+  if (!container) return;
+
+  container.innerHTML = "";
+  container.className = "decrypt-grid"; // ここが重要！
+
+  // 上段：a〜z（旗なし）
+  for (let i = 0; i < 26; i++) {
+    const ch = String.fromCharCode(65 + i);
+    const div = document.createElement("div");
+    div.className = "grid-cell";
+    div.innerHTML = `
+      <div>${ch}</div>
+      <img src="assets/svg/padded/${ch}.svg" data-char="${ch}" data-flag="false">
+    `;
+    container.appendChild(div);
+  }
+
+  // 下段：a〜z（旗あり）
+  for (let i = 0; i < 26; i++) {
+    const ch = String.fromCharCode(65 + i);
+    const div = document.createElement("div");
+    div.className = "grid-cell";
+    div.innerHTML = `
+      <div>${ch}</div>
+      <img src="assets/svg/padded/${ch}f.svg" data-char="${ch}" data-flag="true">
+    `;
+    container.appendChild(div);
+  }
+
+  // イベント登録（共通処理）
+  container.querySelectorAll("img").forEach(img => {
+    img.addEventListener("click", () => {
+      const char = img.dataset.char;
+      const flag = img.dataset.flag === "true";
+      appendDecryption(char, flag);
+    });
+  });
+}
+
+function appendDecryption(char, flag) {
+  const svgFolder = "assets/svg/tight/";
+  const filename = flag ? `${char}f.svg` : `${char}.svg`;
+
+  const img = document.createElement("img");
+  img.src = `${svgFolder}${filename}`;
+  img.alt = char;
+  document.getElementById("decrypt-image-line").appendChild(img);
+
+  const output = document.getElementById("decrypt-output");
+  output.textContent += char + (flag ? " " : "");
+}
+
+function clearDecryption() {
+  document.getElementById("decrypt-image-line").innerHTML = "";
+  document.getElementById("decrypt-output").textContent = "";
+}
+
+function removeLastDecryption() {
+  const imageLine = document.getElementById("decrypt-image-line");
+  const output = document.getElementById("decrypt-output");
+  if (imageLine.lastChild) imageLine.removeChild(imageLine.lastChild);
+  output.textContent = output.textContent.slice(0, -1).trimEnd();
+}
+
+function copyDecryption() {
+  const outputText = document.getElementById("decrypt-output").textContent;
+  navigator.clipboard.writeText(outputText).then(() => {
+    const toast = document.getElementById("copy-toast");
+    toast.classList.add("show");
+    setTimeout(() => {
+      toast.classList.remove("show");
+    }, 2000);
+  });
 }
