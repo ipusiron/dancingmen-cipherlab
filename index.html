@@ -22,7 +22,11 @@
     <section id="encrypt-panel" class="tab-panel active">
       <h2>🔐 暗号化</h2>
       <label for="plaintext">平文を入力してください（A〜Zとスペースのみ）：</label>
-      <textarea id="plaintext" rows="3" placeholder="HELLO WORLD のように入力"></textarea>
+      <textarea id="plaintext" rows="3"
+        placeholder="HELLO WORLD のように入力"
+        oninput="encrypt()"></textarea>
+
+      <!-- 暗号化ボタンはオプションで残しておく -->
       <button onclick="encrypt()">暗号化</button>
 
       <div id="output" class="svg-output"></div>
