@@ -14,8 +14,8 @@
 
   <nav class="tab-menu">
     <button class="tab-button active" onclick="switchTab('encrypt')">🔐 暗号化</button>
-    <button class="tab-button" onclick="switchTab('decrypt')">🧩 復号</button>
-    <button class="tab-button" onclick="switchTab('table')">📖 置換表</button>
+    <button class="tab-button" onclick="switchTab('decrypt')">🥉 復号</button>
+    <button class="tab-button" onclick="switchTab('table')">📓 置換表</button>
   </nav>
 
   <main>
@@ -25,12 +25,8 @@
       <textarea id="plaintext" rows="3"
         placeholder="HELLO WORLD のように入力"
         oninput="encrypt()"></textarea>
-
-      <!-- 暗号化ボタンはオプションで残しておく -->
       <button onclick="encrypt()">暗号化</button>
-
       <div id="output" class="svg-output"></div>
-
       <div>
         <h3>暗号文（ファイル名の列）</h3>
         <pre id="ciphertext" class="cipher-output"></pre>
@@ -38,24 +34,25 @@
     </section>
 
     <section id="decrypt-panel" class="tab-panel">
-      <h2>🧩 復号</h2>
+      <h2>🥉 復号</h2>
       <p>復号機能は現在開発中です。</p>
     </section>
 
     <section id="table-panel" class="tab-panel">
-      <h2>📖 置換表</h2>
-      <p>以下はアルファベットと踊る人形の対応表です。クリックすると拡大表示されます。</p>
-
+      <h2>📓 置換表</h2>
+      <p>以下はアルファベットと踊る人形の対応表です（平文文字がアルファベット、暗号化文字が人形文字）。<strong>クリックすると拡大表示されます。</strong></p>
       <div class="key-table"></div>
-
-      <h3>🏁 旗ありの意味</h3>
-      <p>
-        「旗あり」の人形は、その直後に <strong>空白が来る</strong> ことを示します。<br>
-        たとえば "HELLO WORLD" では、"O" の次がスペースなので "Of.svg"（旗付き）が使われます。
-      </p>
+      <h3>🏱 旗ありの意味</h3>
+      <p>「旗あり」の人形は、その直後に <strong>空白が来る</strong> ことを示します。<br>
+        たとえば "HELLO WORLD" では、"O" の次がスペースなので "Of.svg"（旗付き）が使われます。</p>
       <p>サンプル：<img src="assets/svg/tight/Of.svg" alt="Of" style="width:48px; vertical-align:middle;"> は "O" + 空白</p>
     </section>
   </main>
+
+  <!-- モーダル -->
+  <div id="modal" class="modal" onclick="closeModal()">
+    <img id="modal-img" class="modal-img" src="" alt="">
+  </div>
 
   <footer>
     <div class="footer">

@@ -1,3 +1,26 @@
+document.addEventListener("DOMContentLoaded", () => {
+  document.body.addEventListener("click", (e) => {
+    if (e.target.matches(".key-entry img")) {
+      const modal = document.getElementById("modal");
+      const modalImg = document.getElementById("modal-img");
+      modalImg.src = e.target.src;
+      modalImg.alt = e.target.alt;
+
+      modalImg.removeAttribute("width");
+      modalImg.removeAttribute("height");
+
+      // 明示的にクラス追加してスタイルを強制
+      modalImg.className = "modal-img zoomed";
+
+      modal.classList.add("show");
+    }
+  });
+});
+
+function closeModal() {
+  document.getElementById("modal").classList.remove("show");
+}
+
 function switchTab(tabName) {
   const panels = document.querySelectorAll(".tab-panel");
   const buttons = document.querySelectorAll(".tab-button");
