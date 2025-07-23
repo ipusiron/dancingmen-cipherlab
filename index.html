@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DancingMen CipherLab</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>DancingMen CipherLab</h1>
+    <p>シャーロック・ホームズの「踊る人形」暗号を体験できるツールです。</p>
+  </header>
+
+  <nav class="tab-menu">
+    <button class="tab-button active" onclick="switchTab('encrypt')">🔐 暗号化</button>
+    <button class="tab-button" onclick="switchTab('decrypt')">🧩 復号</button>
+  </nav>
+
+  <main>
+    <!-- 暗号化パネル -->
+    <section id="encrypt-panel" class="tab-panel active">
+      <h2>🔐 暗号化</h2>
+      <label for="plaintext">平文を入力してください（A〜Zとスペースのみ）：</label>
+      <textarea id="plaintext" rows="3" placeholder="HELLO WORLD のように入力"></textarea>
+      <button onclick="encrypt()">暗号化</button>
+      <div id="output" class="svg-output"></div>
+    </section>
+
+    <!-- 復号パネル -->
+    <section id="decrypt-panel" class="tab-panel">
+      <h2>🧩 復号</h2>
+      <p>復号機能は現在開発中です。</p>
+      <div id="decrypt-output" class="svg-output"></div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer">
+      🔗 GitHubリポジトリはこちら（<a href="https://github.com/ipusiron/dancingmen-cipherlab" target="_blank">ipusiron/dancingmen-cipherlab</a>）
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
