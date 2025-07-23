@@ -10,8 +10,7 @@ function switchTab(tabName) {
 }
 
 function encrypt() {
-  // 読み込み元フォルダ（tight版を使う場合はこちらを指定）
-  const svgFolder = "assets/svg/tight/";  // ← assets/svg/padded/ に切り替えることも可
+  const svgFolder = "assets/svg/tight/";
 
   const input = document.getElementById("plaintext").value;
   const outputArea = document.getElementById("output");
@@ -19,11 +18,16 @@ function encrypt() {
   outputArea.innerHTML = "";
   textArea.textContent = "";
 
-  const lines = input.split(/\r?\n/); // 改行で分割（Windowsにも対応）
+  const lines = input.split(/\r?\n/);
   let cipherText = "";
 
   for (const line of lines) {
     const letters = line.toUpperCase().split("");
+
+    // 🔸 行ごとにdivを作成して画像をまとめる
+    const lineDiv = document.createElement("div");
+    lineDiv.className = "svg-line";
+    outputArea.appendChild(lineDiv);
 
     for (let i = 0; i < letters.length; i++) {
       const char = letters[i];
@@ -37,17 +41,14 @@ function encrypt() {
         img.src = `${svgFolder}${filename}`;
         img.alt = char;
         img.title = char + (useFlag ? " (旗あり)" : "");
-        outputArea.appendChild(img);
+        lineDiv.appendChild(img);
 
         cipherText += filename + " ";
       }
     }
 
-    // 改行処理（SVG表示も暗号文も）
-    outputArea.appendChild(document.createElement("br"));
     cipherText += "\n";
   }
 
   textArea.textContent = cipherText.trim();
 }
-

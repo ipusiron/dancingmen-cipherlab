@@ -41,7 +41,12 @@
 
 本ツールで使用している踊る人形のSVG素材は、[Gutenberg Labo / GL-DancingMen](https://github.com/Gutenberg-Labo/GL-DancingMen) にて公開されている **GL-DancingMen.ttf** フォントを基に生成しています。
 
+> 自由に利用・複製OKということで、ありがたく使わせていただきました。
+
 このフォントを利用させていただき、1文字ずつSVG化することで、視覚的に踊る人形暗号を再現しています。
+
+なお、GL-DancingMenフォントをテストしたい場合は、[https://www.fontspace.com/gl-dancingmen-font-f12468](https://www.fontspace.com/gl-dancingmen-font-f12468)が有効です。
+小文字が旗なし、大文字が旗あり、空白はそのまま空白に対応しています。
 
 ---
 ### 🧷 SVG素材のバリエーションについて（padded版とtight版）

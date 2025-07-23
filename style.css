@@ -112,11 +112,15 @@ footer {
   font-size: 0.9rem;
 }
 
-.cipher-output {
-  background-color: #f4f4f4;
-  padding: 1rem;
-  font-family: monospace;
-  white-space: pre-wrap;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+.svg-output {
+  display: block; /* ← flex を解除 */
+  margin-bottom: 1rem;
 }
+
+.svg-line {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
