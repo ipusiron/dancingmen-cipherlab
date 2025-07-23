@@ -78,7 +78,7 @@ function generateTable() {
   const container = document.querySelector(".key-table");
   if (!container) return;
 
-  const svgFolder = "assets/svg/tight/";
+  const svgFolder = "assets/svg/padded/";
   container.innerHTML = "";
 
   for (let i = 0; i < 26; i++) {
