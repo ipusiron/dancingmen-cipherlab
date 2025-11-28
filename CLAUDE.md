@@ -19,7 +19,7 @@ This project has **no build, test, or lint commands**. It consists of static HTM
 ### Core Components
 
 1. **index.html**: Single-page application with three tabs (Encryption, Decryption, Substitution Table)
-2. **script.js**: All cipher logic and UI interactions (~180 lines)
+2. **script.js**: All cipher logic and UI interactions (~230 lines)
 3. **style.css**: Styling and responsive design
 4. **assets/svg/**: Dancing figure SVG images in two variants:
    - `tight/`: Minimal spacing for text display
@@ -45,9 +45,10 @@ The cipher follows these rules:
 - Total of 52 SVG files (26 letters × 2 states)
 
 Key functions:
-- `encrypt()`: Converts plaintext to dancing figures (script.js:76-104)
-- `appendDecryption()`: Builds decrypted text from clicked figures (script.js:123-141)
-- Modal system for image zooming (script.js:15-30)
+- `validateAndSanitizeInput()`: Input validation and sanitization (script.js:37-51)
+- `encrypt()`: Converts plaintext to dancing figures (script.js:78-128)
+- `appendDecryption()`: Builds decrypted text from clicked figures (script.js:189-200)
+- Modal system for image zooming (script.js:3-22)
 
 ### Japanese-First Design
 

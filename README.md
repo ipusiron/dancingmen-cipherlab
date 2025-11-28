@@ -1,3 +1,38 @@
+<!--
+---
+id: day022
+slug: dancingmen-cipherlab
+
+title: "DancingMen CipherLab"
+
+subtitle_ja: "ドイルの踊る人形暗号ツール"
+subtitle_en: "Sherlock Holmes Dancing Men Cipher Tool"
+
+description_ja: "シャーロック・ホームズの短編「踊る人形」に登場する古典暗号を再現・体験できるWebツール。平文の暗号化、復号支援、置換表の参照が可能。"
+description_en: "A web tool to experience the classical substitution cipher from Arthur Conan Doyle's Sherlock Holmes story 'The Dancing Men'. Supports encryption, decryption assistance, and substitution table reference."
+
+category_ja:
+  - 古典暗号
+  - 換字式暗号
+category_en:
+  - Classical Cryptography
+  - Substitution Cipher
+
+difficulty: 1
+
+tags:
+  - sherlock-holmes
+  - dancing-men
+  - cryptography
+  - visualization
+
+repo_url: "https://github.com/ipusiron/dancingmen-cipherlab"
+demo_url: "https://ipusiron.github.io/dancingmen-cipherlab/"
+
+hub: true
+---
+-->
+
 # DancingMen CipherLab - ドイルの踊る人形暗号ツール
 
 ![GitHub Repo stars](https://img.shields.io/github/stars/ipusiron/dancingmen-cipherlab?style=social)
@@ -85,7 +120,7 @@
 - **イベント駆動設計**: 効率的なイベントデリゲーションによるUI制御
 
 ---
-## 📁 ディレクトリ構成
+## 📁 ディレクトリー構成
 
 ```
 dancingmen-cipherlab/
