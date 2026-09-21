@@ -3,25 +3,32 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+    <meta name="referrer" content="no-referrer" />
+    <link rel="icon" type="image/svg+xml" href="assets/svg/padded/Ef.svg" />
     <title>DancingMen CipherLab</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
+    <noscript>このツールはJavaScriptを有効にすると動きます。</noscript>
     <header>
       <h1>DancingMen CipherLab</h1>
       <p>シャーロック・ホームズの「踊る人形」暗号を体験できるツールです。</p>
     </header>
 
-    <nav class="tab-menu">
-      <button class="tab-button active" onclick="switchTab('encrypt')">
+    <nav class="tab-menu" role="tablist" aria-label="暗号化・復号・置換表">
+      <button type="button" class="tab-button active" role="tab" id="tab-encrypt" data-tab="encrypt"
+        aria-controls="encrypt-panel" aria-selected="true" tabindex="0">
         🔐 暗号化
       </button>
-      <button class="tab-button" onclick="switchTab('decrypt')">🔓 復号</button>
-      <button class="tab-button" onclick="switchTab('table')">📓 置換表</button>
+      <button type="button" class="tab-button" role="tab" id="tab-decrypt" data-tab="decrypt"
+        aria-controls="decrypt-panel" aria-selected="false" tabindex="-1">🔓 復号</button>
+      <button type="button" class="tab-button" role="tab" id="tab-table" data-tab="table"
+        aria-controls="table-panel" aria-selected="false" tabindex="-1">📓 置換表</button>
     </nav>
 
     <main>
-      <section id="encrypt-panel" class="tab-panel active">
+      <section id="encrypt-panel" class="tab-panel active" role="tabpanel" aria-labelledby="tab-encrypt">
         <h2>🔐 暗号化</h2>
         <label for="plaintext"
           >平文を入力してください（A〜Zとスペース、改行）</label
@@ -34,9 +41,10 @@
           spellcheck="false"
           autocomplete="off"
           autocapitalize="characters"
+          aria-describedby="input-hint validation-feedback"
         ></textarea>
         <div class="input-guide">
-          <small>A〜Zとスペース、改行が使えます。全角の英字とスペースは半角に置き換えます。</small>
+          <small id="input-hint">A〜Zとスペース、改行が使えます。全角の英字とスペースは半角に置き換えます。</small>
           <small id="char-count" class="char-count">暗号化可能文字数: 0</small>
         </div>
         <div id="validation-feedback" class="validation-feedback" role="status"></div>
@@ -58,51 +66,59 @@
           <pre id="fonttext" class="cipher-output"></pre>
           <p>小文字が旗なし、大文字が旗あり。GL-DancingMenフォントを指定すると、そのまま踊る人形になります。復号タブへ貼り付けると元の文に戻せます。</p>
           <button type="button" id="copy-font">フォント用の文字列をコピー</button>
-          <div id="font-copy-status" role="status"></div>
+          <div id="font-copy-status" class="status-message" role="status"></div>
         </div>
       </section>
 
-      <section id="decrypt-panel" class="tab-panel">
+      <section id="decrypt-panel" class="tab-panel" role="tabpanel" aria-labelledby="tab-decrypt" hidden>
         <h2>🔓 復号</h2>
         <p>
-          下の人形から順にクリックして、対応する文字を復元していってください。
+          下の人形をクリックするか、Tabで選んでEnterを押すと、対応する文字を復元できます。
         </p>
 
         <div class="decrypt-input-area">
-          <p>▼ 以下の人形をクリックして復号対象に追加：</p>
-          <div id="decrypt-buttons" class="key-table"></div>
+          <p>▼ 以下の人形を選んで復号対象に追加します。</p>
+          <div id="decrypt-buttons">
+            <h3>旗なし</h3>
+            <div class="decrypt-grid" id="decrypt-grid-plain"></div>
+            <h3>旗あり（語の終わり）</h3>
+            <div class="decrypt-grid" id="decrypt-grid-flag"></div>
+          </div>
 
-          <h3>入力した人形：</h3>
+          <label for="cipher-paste">暗号文のテキストを貼り付ける（フォント用の文字列、またはファイル名の列）</label>
+          <textarea id="cipher-paste" rows="3" maxlength="20000" spellcheck="false"></textarea>
+          <button type="button" id="decode-paste">貼り付けた暗号文を復号</button>
+          <div id="decode-status" class="status-message" role="status"></div>
+
+          <h3>入力した人形</h3>
           <div id="decrypt-image-line" class="svg-output"></div>
         </div>
 
-        <div class="decrypt-control-area" style="margin-top: 1rem">
-          <button onclick="clearDecryption()">クリア</button>
-          <button onclick="removeLastDecryption()">1文字削除</button>
+        <div class="decrypt-control-area">
+          <button type="button" id="decrypt-clear">クリア</button>
+          <button type="button" id="decrypt-delete">1文字削除</button>
         </div>
 
-        <div class="decrypt-output-area" style="margin-top: 1rem">
-          <h3>復号結果：</h3>
+        <div class="decrypt-output-area">
+          <h3>復号結果</h3>
           <pre id="decrypt-output" class="cipher-output"></pre>
-          <button onclick="copyDecryption()">復号結果をコピー</button>
+          <button type="button" id="copy-decryption">復号結果をコピー</button>
         </div>
-		<div id="copy-toast" class="toast">
-          復号結果をコピーしました
-        </div>
+        <div id="copy-toast" class="status-message" role="status"></div>
       </section>
 
-      <section id="table-panel" class="tab-panel">
+      <section id="table-panel" class="tab-panel" role="tabpanel" aria-labelledby="tab-table" hidden>
         <h2>📓 置換表</h2>
         <p>
           以下はアルファベットと踊る人形の対応表です（平文文字がアルファベット、暗号化文字が人形文字）。<br /><strong
-            >クリックすると拡大表示されます。</strong
+            >クリック、またはTabで選んでEnterを押すと拡大表示されます。</strong
           >
         </p>
         <div class="key-table"></div>
-        <h3>🏱 旗ありの意味</h3>
+        <h3>🚩 旗ありの意味</h3>
         <p>
           「旗あり」の人形は、その直後に
-          <strong>空白が来る</strong> ことを示します。<br />
+          <strong>空白が来る</strong>ことを示します。続く行に英字がある場合も、行末の文字に旗が付きます。空行は通の区切りです。<br />
           たとえば "HELLO WORLD" では、"O" の次がスペースなので
           "Of.svg"（旗付き）が使われます。
         </p>
@@ -110,7 +126,7 @@
           サンプル：<img
             src="assets/svg/padded/Of.svg"
             alt="Of"
-            style="width: 48px; vertical-align: middle"
+            class="sample-figure"
           />
           は "O" + 空白
         </p>
@@ -118,15 +134,17 @@
     </main>
 
     <!-- モーダル -->
-    <div id="modal" class="modal" onclick="closeModal()">
-      <img id="modal-img" class="modal-img" src="" alt="" />
-    </div>
+    <dialog id="modal" class="modal" aria-label="人形の拡大表示">
+      <img id="modal-img" class="modal-img" alt="" />
+      <button type="button" id="modal-close">閉じる</button>
+    </dialog>
 
     <footer>
       <div class="footer">
         🔗 GitHubリポジトリはこちら（<a
           href="https://github.com/ipusiron/dancingmen-cipherlab"
           target="_blank"
+          rel="noopener noreferrer"
           >ipusiron/dancingmen-cipherlab</a
         >）
       </div>

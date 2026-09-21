@@ -26,3 +26,15 @@ test("dependency-free Node 22 CI runs tests on pushes and pull requests", () => 
   assert.match(workflow, /run: npm test/);
   assert.doesNotMatch(read(".gitignore"), /\.github\/workflows/);
 });
+
+test("UI avoids unsafe DOM, external communication and non-dictionary Japanese literals", () => {
+  const source = read("script.js");
+  assert.doesNotMatch(source, /innerHTML|console\.|alert\s*\(|setAttribute\(["']style|\.cssText/);
+  assert.doesNotMatch(source, /\bfetch\s*\(|XMLHttpRequest|WebSocket|sendBeacon|image\/svg\+xml/);
+  assert.doesNotMatch(source, /\.style\b|document\.execCommand/);
+  const withoutComments = source.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, "");
+  assert.doesNotMatch(withoutComments, /[\u3040-\u30ff\u3400-\u9fff]/);
+  assert.match(source, /querySelectorAll\('\[role="tab"\]'\)/);
+  assert.match(source, /new Map\(\)/);
+  assert.match(source, /globalCompositeOperation = "multiply"/);
+});

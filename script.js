@@ -4,25 +4,42 @@ const logic = DancingMenLogic;
 const t = (key, values) => DancingMenMessages.format(DancingMenMessages.DEFAULT_LANG, key, values);
 let compositionCommitValue = null;
 let encryptedLines = [[]];
-const decryptionFigures = [];
+let decryptionLines = [[]];
+let modalTrigger = null;
 const exportImages = new Map();
 const EXPORT_SCALE = 2;
 
 document.addEventListener("DOMContentLoaded", () => {
-  document.body.addEventListener("click", (e) => {
-    if (e.target.matches(".key-entry img")) {
-      const modal = document.getElementById("modal");
-      const modalImg = document.getElementById("modal-img");
-      modalImg.src = e.target.src;
-      modalImg.alt = e.target.alt;
-      modalImg.removeAttribute("width");
-      modalImg.removeAttribute("height");
-      modalImg.className = "modal-img zoomed";
-      modal.classList.add("show");
-    }
+  const modal = document.getElementById("modal");
+  document.querySelector("#table-panel .key-table").addEventListener("click", event => {
+    const button = event.target.closest(".figure-zoom");
+    if (!button) return;
+    modalTrigger = button;
+    const modalImg = document.getElementById("modal-img");
+    modalImg.src = button.querySelector("img").src;
+    modalImg.alt = button.getAttribute("aria-label");
+    modal.showModal();
   });
-
+  modal.addEventListener("click", event => {
+    if (event.target === modal) closeModal();
+  });
+  modal.addEventListener("close", () => modalTrigger?.focus());
+  document.getElementById("modal-close").addEventListener("click", closeModal);
+  document.querySelector(".tab-menu").addEventListener("click", event => {
+    const tab = event.target.closest('[role="tab"]');
+    if (tab) switchTab(tab.dataset.tab);
+  });
+  document.querySelector(".tab-menu").addEventListener("keydown", handleTabKey);
   generateDecryptButtons();
+  generateTable();
+  document.getElementById("decrypt-buttons").addEventListener("click", event => {
+    const button = event.target.closest("button[data-char]");
+    if (button) appendDecryption(button.dataset.char, button.dataset.flag === "true");
+  });
+  document.getElementById("decrypt-clear").addEventListener("click", clearDecryption);
+  document.getElementById("decrypt-delete").addEventListener("click", removeLastDecryption);
+  document.getElementById("copy-decryption").addEventListener("click", copyDecryption);
+  document.getElementById("decode-paste").addEventListener("click", decodePaste);
   const plaintext = document.getElementById("plaintext");
   plaintext.addEventListener("input", event => {
     if (event.isComposing) return;
@@ -46,20 +63,40 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function closeModal() {
-  document.getElementById("modal").classList.remove("show");
+  document.getElementById("modal").close();
 }
 
 function switchTab(tabName) {
   const panels = document.querySelectorAll(".tab-panel");
   const buttons = document.querySelectorAll(".tab-button");
 
-  panels.forEach(panel => panel.classList.remove("active"));
-  buttons.forEach(btn => btn.classList.remove("active"));
+  panels.forEach(panel => {
+    const selected = panel.id === `${tabName}-panel`;
+    panel.classList.toggle("active", selected);
+    panel.hidden = !selected;
+  });
+  buttons.forEach(button => {
+    const selected = button.dataset.tab === tabName;
+    button.classList.toggle("active", selected);
+    button.setAttribute("aria-selected", String(selected));
+    button.tabIndex = selected ? 0 : -1;
+  });
+  document.querySelector(`[data-tab="${tabName}"]`).focus();
+}
 
-  document.getElementById(`${tabName}-panel`).classList.add("active");
-  document.querySelector(`.tab-button[onclick="switchTab('${tabName}')"]`).classList.add("active");
-
-  if (tabName === "table") generateTable();
+function handleTabKey(event) {
+  const tabs = [...document.querySelectorAll('[role="tab"]')];
+  const index = tabs.indexOf(event.target);
+  if (index < 0) return;
+  let next;
+  if (event.key === "ArrowRight") next = (index + 1) % tabs.length;
+  if (event.key === "ArrowLeft") next = (index - 1 + tabs.length) % tabs.length;
+  if (event.key === "Home") next = 0;
+  if (event.key === "End") next = tabs.length - 1;
+  if (next !== undefined) {
+    event.preventDefault();
+    switchTab(tabs[next].dataset.tab);
+  }
 }
 
 function showValidationFeedback(validationResult) {
@@ -183,112 +220,113 @@ function generateSamples() {
 }
 
 async function copyFontText() {
-  const status = document.getElementById("font-copy-status");
+  await copyText(document.getElementById("fonttext").textContent,
+    document.getElementById("font-copy-status"), t("copy.fontSuccess"));
+}
+
+async function copyText(text, status, success) {
+  status.textContent = "";
   try {
     if (!navigator.clipboard || typeof navigator.clipboard.writeText !== "function") throw new Error("Clipboard unavailable");
-    await navigator.clipboard.writeText(document.getElementById("fonttext").textContent);
-    status.textContent = t("copy.fontSuccess");
+    await navigator.clipboard.writeText(text);
+    status.textContent = success;
   } catch {
     status.textContent = t("copy.failure");
   }
 }
 
 function generateTable() {
-  const container = document.querySelector(".key-table");
+  const container = document.querySelector("#table-panel .key-table");
   if (!container) return;
   const svgFolder = "assets/svg/padded/";
-  container.innerHTML = "";
-  for (let i = 0; i < 26; i++) {
-    const ch = String.fromCharCode(65 + i);
+  for (const ch of logic.LETTERS) {
     const div = document.createElement("div");
     div.className = "key-entry";
-    div.innerHTML = `
-      <div class="char-label">${ch}</div>
-      <img src="${svgFolder}${ch}.svg" alt="${ch}" title="${ch}">
-      <img src="${svgFolder}${ch}f.svg" alt="${ch}f" title="${ch} (旗あり)">
-    `;
+    const label = document.createElement("div");
+    label.className = "char-label";
+    label.textContent = t("figure.letter", { letter: ch });
+    div.appendChild(label);
+    for (const flag of [false, true]) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "figure-zoom";
+      const figure = flag ? t("figure.flag", { letter: ch }) : t("figure.plain", { letter: ch });
+      button.setAttribute("aria-label", t("figure.zoom", { figure }));
+      button.title = button.getAttribute("aria-label");
+      const img = document.createElement("img");
+      img.src = svgFolder + logic.tokenFileName({ letter: ch, flag });
+      img.alt = "";
+      button.appendChild(img);
+      div.appendChild(button);
+    }
     container.appendChild(div);
   }
 }
 
 function generateDecryptButtons() {
-  const container = document.getElementById("decrypt-buttons");
-  if (!container) return;
-
-  container.innerHTML = "";
-  container.className = "decrypt-grid"; // ここが重要！
-
-  // 上段：a〜z（旗なし）
-  for (let i = 0; i < 26; i++) {
-    const ch = String.fromCharCode(65 + i);
-    const div = document.createElement("div");
-    div.className = "grid-cell";
-    div.innerHTML = `
-      <div>${ch}</div>
-      <img src="assets/svg/padded/${ch}.svg" data-char="${ch}" data-flag="false">
-    `;
-    container.appendChild(div);
+  for (const flag of [false, true]) {
+    const container = document.getElementById(flag ? "decrypt-grid-flag" : "decrypt-grid-plain");
+    for (const ch of logic.LETTERS) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "grid-cell";
+      button.dataset.char = ch;
+      button.dataset.flag = String(flag);
+      button.setAttribute("aria-label", flag ? t("figure.flag", { letter: ch }) : t("figure.plain", { letter: ch }));
+      const label = document.createElement("span");
+      label.textContent = t("figure.letter", { letter: ch });
+      const img = document.createElement("img");
+      img.src = "assets/svg/padded/" + logic.tokenFileName({ letter: ch, flag });
+      img.alt = "";
+      button.append(label, img);
+      container.appendChild(button);
+    }
   }
-
-  // 下段：a〜z（旗あり）
-  for (let i = 0; i < 26; i++) {
-    const ch = String.fromCharCode(65 + i);
-    const div = document.createElement("div");
-    div.className = "grid-cell";
-    div.innerHTML = `
-      <div>${ch}</div>
-      <img src="assets/svg/padded/${ch}f.svg" data-char="${ch}" data-flag="true">
-    `;
-    container.appendChild(div);
-  }
-
-  // イベント登録（共通処理）
-  container.querySelectorAll("img").forEach(img => {
-    img.addEventListener("click", () => {
-      const char = img.dataset.char;
-      const flag = img.dataset.flag === "true";
-      appendDecryption(char, flag);
-    });
-  });
 }
 
 function appendDecryption(char, flag) {
-  decryptionFigures.push({ letter: char, flag });
-  renderFigures(document.getElementById("decrypt-image-line"), [decryptionFigures]);
-
-  const output = document.getElementById("decrypt-output");
-  output.textContent += char + (flag ? " " : "");
+  if (logic.countLetters(decryptionLines) >= logic.MAX_INPUT_LENGTH) {
+    document.getElementById("decode-status").textContent = t("decode.tooLong", { max: "2,000" });
+    return;
+  }
+  decryptionLines.at(-1).push({ letter: char, flag });
+  updateDecryption();
 }
 
-function clearDecryption() {
-  decryptionFigures.length = 0;
-  renderFigures(document.getElementById("decrypt-image-line"), [decryptionFigures]);
-  document.getElementById("decrypt-output").textContent = "";
+function updateDecryption() {
+  renderFigures(document.getElementById("decrypt-image-line"), decryptionLines);
+  document.getElementById("decrypt-output").textContent = logic.decodeTokens(decryptionLines);
+  document.getElementById("copy-toast").textContent = "";
+  document.getElementById("decode-status").textContent = "";
 }
 
-function removeLastDecryption() {
-  const output = document.getElementById("decrypt-output");
-  decryptionFigures.pop();
-  renderFigures(document.getElementById("decrypt-image-line"), [decryptionFigures]);
-
-  // 現在の出力を取得
-  let current = output.textContent;
-
-  // 末尾が空白なら空白 + 直前の1文字削除、そうでなければ1文字だけ削除
-  if (current.endsWith(" ")) {
-    output.textContent = current.slice(0, -2);
-  } else {
-    output.textContent = current.slice(0, -1);
+function decodePaste() {
+  const parsed = logic.parseCipherText(document.getElementById("cipher-paste").value);
+  const status = document.getElementById("decode-status");
+  if (logic.countLetters(parsed.lines) > logic.MAX_INPUT_LENGTH) {
+    status.textContent = t("decode.tooLong", { max: "2,000" });
+    return;
+  }
+  decryptionLines = parsed.lines;
+  updateDecryption();
+  if (parsed.invalid.length) {
+    status.textContent = t("decode.invalid", { chars: parsed.invalid.slice(0, 10) }) +
+      (parsed.invalid.length > 10 ? t("decode.more", { count: parsed.invalid.length - 10 }) : "");
   }
 }
 
+function clearDecryption() {
+  decryptionLines = [[]];
+  document.getElementById("cipher-paste").value = "";
+  updateDecryption();
+}
+
+function removeLastDecryption() {
+  if (!decryptionLines.at(-1).length && decryptionLines.length > 1) decryptionLines.pop();
+  else decryptionLines.at(-1).pop();
+  updateDecryption();
+}
+
 function copyDecryption() {
-  const outputText = document.getElementById("decrypt-output").textContent;
-  navigator.clipboard.writeText(outputText).then(() => {
-    const toast = document.getElementById("copy-toast");
-    toast.classList.add("show");
-    setTimeout(() => {
-      toast.classList.remove("show");
-    }, 2000);
-  });
+  return copyText(logic.decodeTokens(decryptionLines), document.getElementById("copy-toast"), t("copy.decryptSuccess"));
 }

@@ -21,7 +21,13 @@ const DancingMenMessages = (() => {
       "save.tooLarge": "画像が大きすぎて保存できません。1行を短くするか、行数を減らしてください",
       "save.unavailable": "このページをfile://で開いているときはPNGを保存できません。" +
         "公開ページか、ローカルサーバー（python -m http.server など）で開いてください",
-      "save.success": "暗号文をPNGで保存しました"
+      "save.success": "暗号文をPNGで保存しました",
+      "figure.plain": "{letter}（旗なし）",
+      "figure.zoom": "{figure}を拡大",
+      "decode.tooLong": "人形が{max}個を超える暗号文は復号できません。短くしてから貼り付けてください",
+      "decode.invalid": "読めなかった部分: {chars}",
+      "decode.more": " ほか{count}件",
+      "copy.decryptSuccess": "復号結果をコピーしました"
     }
   };
 
