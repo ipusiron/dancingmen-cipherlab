@@ -1,232 +1,332 @@
 // script.js
 
-document.addEventListener("DOMContentLoaded", () => {
-  document.body.addEventListener("click", (e) => {
-    if (e.target.matches(".key-entry img")) {
-      const modal = document.getElementById("modal");
-      const modalImg = document.getElementById("modal-img");
-      modalImg.src = e.target.src;
-      modalImg.alt = e.target.alt;
-      modalImg.removeAttribute("width");
-      modalImg.removeAttribute("height");
-      modalImg.className = "modal-img zoomed";
-      modal.classList.add("show");
-    }
-  });
+const logic = DancingMenLogic;
+const t = (key, values) => DancingMenMessages.format(DancingMenMessages.DEFAULT_LANG, key, values);
+let compositionCommitValue = null;
+let encryptedLines = [[]];
+let decryptionLines = [[]];
+let modalTrigger = null;
+const exportImages = new Map();
+const EXPORT_SCALE = 2;
 
+document.addEventListener("DOMContentLoaded", () => {
+  const modal = document.getElementById("modal");
+  document.querySelector("#table-panel .key-table").addEventListener("click", event => {
+    const button = event.target.closest(".figure-zoom");
+    if (!button) return;
+    modalTrigger = button;
+    const modalImg = document.getElementById("modal-img");
+    modalImg.src = button.querySelector("img").src;
+    modalImg.alt = button.getAttribute("aria-label");
+    modal.showModal();
+  });
+  modal.addEventListener("click", event => {
+    if (event.target === modal) closeModal();
+  });
+  modal.addEventListener("close", () => modalTrigger?.focus());
+  document.getElementById("modal-close").addEventListener("click", closeModal);
+  document.querySelector(".tab-menu").addEventListener("click", event => {
+    const tab = event.target.closest('[role="tab"]');
+    if (tab) switchTab(tab.dataset.tab);
+  });
+  document.querySelector(".tab-menu").addEventListener("keydown", handleTabKey);
   generateDecryptButtons();
+  generateTable();
+  document.getElementById("decrypt-buttons").addEventListener("click", event => {
+    const button = event.target.closest("button[data-char]");
+    if (button) appendDecryption(button.dataset.char, button.dataset.flag === "true");
+  });
+  document.getElementById("decrypt-clear").addEventListener("click", clearDecryption);
+  document.getElementById("decrypt-delete").addEventListener("click", removeLastDecryption);
+  document.getElementById("copy-decryption").addEventListener("click", copyDecryption);
+  document.getElementById("decode-paste").addEventListener("click", decodePaste);
+  const plaintext = document.getElementById("plaintext");
+  plaintext.addEventListener("input", event => {
+    if (event.isComposing) return;
+    const duplicateCommit = compositionCommitValue === plaintext.value;
+    compositionCommitValue = null;
+    if (!duplicateCommit) encrypt();
+  });
+  plaintext.addEventListener("compositionend", () => {
+    encrypt();
+    compositionCommitValue = plaintext.value;
+  });
+  document.getElementById("encrypt-button").addEventListener("click", encrypt);
+  generateSamples();
+  document.getElementById("sample-load").addEventListener("click", () => {
+    const id = document.getElementById("sample-select").value;
+    plaintext.value = id === "all" ? logic.allSamplesText() : logic.SAMPLES.find(sample => sample.id === id).text;
+    encrypt();
+  });
+  document.getElementById("copy-font").addEventListener("click", copyFontText);
+  document.getElementById("save-png").addEventListener("click", savePng);
 });
 
 function closeModal() {
-  document.getElementById("modal").classList.remove("show");
+  document.getElementById("modal").close();
 }
 
 function switchTab(tabName) {
   const panels = document.querySelectorAll(".tab-panel");
   const buttons = document.querySelectorAll(".tab-button");
 
-  panels.forEach(panel => panel.classList.remove("active"));
-  buttons.forEach(btn => btn.classList.remove("active"));
-
-  document.getElementById(`${tabName}-panel`).classList.add("active");
-  document.querySelector(`.tab-button[onclick="switchTab('${tabName}')"]`).classList.add("active");
-
-  if (tabName === "table") generateTable();
+  panels.forEach(panel => {
+    const selected = panel.id === `${tabName}-panel`;
+    panel.classList.toggle("active", selected);
+    panel.hidden = !selected;
+  });
+  buttons.forEach(button => {
+    const selected = button.dataset.tab === tabName;
+    button.classList.toggle("active", selected);
+    button.setAttribute("aria-selected", String(selected));
+    button.tabIndex = selected ? 0 : -1;
+  });
+  document.querySelector(`[data-tab="${tabName}"]`).focus();
 }
 
-function validateAndSanitizeInput(input) {
-  // 許可する文字: A-Z, a-z, スペース、改行
-  const allowedPattern = /[^A-Za-z\s\n\r]/g;
-  const invalidChars = input.match(allowedPattern);
-  
-  // 無効な文字を削除
-  const sanitized = input.replace(allowedPattern, '');
-  
-  return {
-    sanitized: sanitized,
-    hasInvalidChars: invalidChars !== null,
-    invalidChars: invalidChars ? [...new Set(invalidChars)] : [],
-    validCharCount: sanitized.replace(/[\s\n\r]/g, '').length
-  };
+function handleTabKey(event) {
+  const tabs = [...document.querySelectorAll('[role="tab"]')];
+  const index = tabs.indexOf(event.target);
+  if (index < 0) return;
+  let next;
+  if (event.key === "ArrowRight") next = (index + 1) % tabs.length;
+  if (event.key === "ArrowLeft") next = (index - 1 + tabs.length) % tabs.length;
+  if (event.key === "Home") next = 0;
+  if (event.key === "End") next = tabs.length - 1;
+  if (next !== undefined) {
+    event.preventDefault();
+    switchTab(tabs[next].dataset.tab);
+  }
 }
 
 function showValidationFeedback(validationResult) {
   const feedbackElement = document.getElementById('validation-feedback');
-  const charCountElement = document.getElementById('char-count');
-  
-  if (!feedbackElement || !charCountElement) return;
-  
-  // 文字数の更新
-  charCountElement.textContent = `暗号化可能文字数: ${validationResult.validCharCount}`;
-  
-  // エラーメッセージの表示/非表示
-  if (validationResult.hasInvalidChars) {
-    feedbackElement.textContent = `無効な文字が削除されました: ${validationResult.invalidChars.join(', ')}`;
-    feedbackElement.style.display = 'block';
-    feedbackElement.classList.add('show');
-    
-    // 3秒後にフェードアウト
-    setTimeout(() => {
-      feedbackElement.classList.remove('show');
-      setTimeout(() => {
-        feedbackElement.style.display = 'none';
-      }, 300);
-    }, 3000);
-  }
+  const items = logic.feedbackItems(validationResult);
+  feedbackElement.textContent = items.map(item => t(item.key, item.values)).join(t("feedback.separator"));
+  feedbackElement.classList.toggle("show", items.length > 0);
 }
 
 function encrypt() {
-  const svgFolder = "assets/svg/tight/";
-  const rawInput = document.getElementById("plaintext").value;
+  const plaintext = document.getElementById("plaintext");
+  const rawInput = plaintext.value;
+  const caret = plaintext.selectionStart;
   const outputArea = document.getElementById("output");
-  const textArea = document.getElementById("ciphertext");
-  
-  // 入力をバリデーション
-  const validationResult = validateAndSanitizeInput(rawInput);
-  const input = validationResult.sanitized;
-  
-  // バリデーション結果を表示
-  showValidationFeedback(validationResult);
-  
-  // 元の入力と異なる場合は、サニタイズされた値で更新
-  if (rawInput !== input) {
-    document.getElementById("plaintext").value = input;
+  const validationResult = logic.sanitizeInput(rawInput);
+
+  // 正規化した分だけキャレットの位置を補正する。
+  if (rawInput !== validationResult.text) {
+    plaintext.value = validationResult.text;
+    const nextCaret = logic.caretAfterSanitize(rawInput, caret);
+    plaintext.setSelectionRange(nextCaret, nextCaret);
   }
-  
-  outputArea.innerHTML = "";
-  textArea.textContent = "";
+  showValidationFeedback(validationResult);
+  const lines = logic.encryptText(validationResult.text);
+  encryptedLines = lines;
+  document.getElementById("char-count").textContent = t("encrypt.count", { count: logic.countLetters(lines) });
+  document.getElementById("ciphertext").textContent = logic.toFileNameText(lines);
+  document.getElementById("fonttext").textContent = logic.toFontText(lines);
+  document.getElementById("font-copy-status").textContent = "";
+  document.getElementById("save-status").textContent = "";
+  document.getElementById("save-png").disabled = logic.countLetters(lines) === 0;
+  renderFigures(outputArea, lines);
+}
 
-  const lines = input.split(/\r?\n/);
-  let cipherText = "";
-
+function renderFigures(container, lines) {
+  container.replaceChildren();
   for (const line of lines) {
-    const letters = line.split("");
     const lineDiv = document.createElement("div");
     lineDiv.className = "svg-line";
-    outputArea.appendChild(lineDiv);
-
-    for (let i = 0; i < letters.length; i++) {
-      const char = letters[i];
-      const upperChar = char.toUpperCase();
-      if ((char >= 'A' && char <= 'Z') || (char >= 'a' && char <= 'z')) {
-        const next = letters[i + 1];
-        const useFlag = (next === " ");
-        const filename = useFlag ? `${upperChar}f.svg` : `${upperChar}.svg`;
-
-        const img = document.createElement("img");
-        img.src = `${svgFolder}${filename}`;
-        img.alt = upperChar;
-        img.title = char + (useFlag ? " (旗あり)" : "");
-        lineDiv.appendChild(img);
-
-        cipherText += filename + " ";
-      }
+    if (!line.length) lineDiv.classList.add("is-blank");
+    container.appendChild(lineDiv);
+    for (const token of line) {
+      const img = document.createElement("img");
+      img.src = "assets/svg/full/" + logic.tokenFileName(token);
+      img.alt = token.flag ? t("figure.flag", { letter: token.letter }) : t("figure.letter", { letter: token.letter });
+      img.title = img.alt;
+      lineDiv.appendChild(img);
     }
-    cipherText += "\n";
   }
-  textArea.textContent = cipherText.trim();
+}
+
+async function exportImage(name) {
+  if (!exportImages.has(name)) {
+    const img = new Image();
+    img.src = "assets/svg/full/" + name;
+    exportImages.set(name, img.decode().then(() => img).catch(error => {
+      exportImages.delete(name);
+      throw error;
+    }));
+  }
+  return exportImages.get(name);
+}
+
+async function savePng() {
+  const status = document.getElementById("save-status");
+  const layout = logic.layoutCipher(encryptedLines);
+  if (!layout.figures.length) return;
+  if (layout.width > 8000 || layout.height > 8000) {
+    status.textContent = t("save.tooLarge");
+    return;
+  }
+  if (location.protocol === "file:") {
+    status.textContent = t("save.unavailable");
+    return;
+  }
+  let url;
+  try {
+    const names = [...new Set(layout.figures.map(figure => figure.name))];
+    const images = new Map(await Promise.all(names.map(async name => [name, await exportImage(name)])));
+    const canvas = document.createElement("canvas");
+    canvas.width = layout.width * EXPORT_SCALE;
+    canvas.height = layout.height * EXPORT_SCALE;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Canvas unavailable");
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.globalCompositeOperation = "multiply";
+    for (const figure of layout.figures) {
+      context.drawImage(images.get(figure.name), figure.x * EXPORT_SCALE, figure.y * EXPORT_SCALE,
+        figure.w * EXPORT_SCALE, figure.h * EXPORT_SCALE);
+    }
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+    if (!blob) throw new Error("Empty PNG");
+    url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "dancingmen-cipher.png";
+    link.click();
+    status.textContent = t("save.success");
+  } catch {
+    status.textContent = t("save.unavailable");
+  } finally {
+    if (url) URL.revokeObjectURL(url);
+  }
+}
+
+function generateSamples() {
+  const select = document.getElementById("sample-select");
+  logic.SAMPLES.forEach((sample, index) => {
+    const option = document.createElement("option");
+    option.value = sample.id;
+    const text = sample.text.split("\n").join(t("sample.lineSeparator"));
+    option.textContent = t("sample.label", { number: index + 1, text }) +
+      (sample.text.includes("\n") ? t("sample.multiline") : "");
+    select.appendChild(option);
+  });
+  const all = document.createElement("option");
+  all.value = "all";
+  all.textContent = t("sample.all", { count: logic.SAMPLES.length });
+  select.appendChild(all);
+}
+
+async function copyFontText() {
+  await copyText(document.getElementById("fonttext").textContent,
+    document.getElementById("font-copy-status"), t("copy.fontSuccess"));
+}
+
+async function copyText(text, status, success) {
+  status.textContent = "";
+  try {
+    if (!navigator.clipboard || typeof navigator.clipboard.writeText !== "function") throw new Error("Clipboard unavailable");
+    await navigator.clipboard.writeText(text);
+    status.textContent = success;
+  } catch {
+    status.textContent = t("copy.failure");
+  }
 }
 
 function generateTable() {
-  const container = document.querySelector(".key-table");
+  const container = document.querySelector("#table-panel .key-table");
   if (!container) return;
   const svgFolder = "assets/svg/padded/";
-  container.innerHTML = "";
-  for (let i = 0; i < 26; i++) {
-    const ch = String.fromCharCode(65 + i);
+  for (const ch of logic.LETTERS) {
     const div = document.createElement("div");
     div.className = "key-entry";
-    div.innerHTML = `
-      <div class="char-label">${ch}</div>
-      <img src="${svgFolder}${ch}.svg" alt="${ch}" title="${ch}">
-      <img src="${svgFolder}${ch}f.svg" alt="${ch}f" title="${ch} (旗あり)">
-    `;
+    const label = document.createElement("div");
+    label.className = "char-label";
+    label.textContent = t("figure.letter", { letter: ch });
+    div.appendChild(label);
+    for (const flag of [false, true]) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "figure-zoom";
+      const figure = flag ? t("figure.flag", { letter: ch }) : t("figure.plain", { letter: ch });
+      button.setAttribute("aria-label", t("figure.zoom", { figure }));
+      button.title = button.getAttribute("aria-label");
+      const img = document.createElement("img");
+      img.src = svgFolder + logic.tokenFileName({ letter: ch, flag });
+      img.alt = "";
+      button.appendChild(img);
+      div.appendChild(button);
+    }
     container.appendChild(div);
   }
 }
 
 function generateDecryptButtons() {
-  const container = document.getElementById("decrypt-buttons");
-  if (!container) return;
-
-  container.innerHTML = "";
-  container.className = "decrypt-grid"; // ここが重要！
-
-  // 上段：a〜z（旗なし）
-  for (let i = 0; i < 26; i++) {
-    const ch = String.fromCharCode(65 + i);
-    const div = document.createElement("div");
-    div.className = "grid-cell";
-    div.innerHTML = `
-      <div>${ch}</div>
-      <img src="assets/svg/padded/${ch}.svg" data-char="${ch}" data-flag="false">
-    `;
-    container.appendChild(div);
+  for (const flag of [false, true]) {
+    const container = document.getElementById(flag ? "decrypt-grid-flag" : "decrypt-grid-plain");
+    for (const ch of logic.LETTERS) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "grid-cell";
+      button.dataset.char = ch;
+      button.dataset.flag = String(flag);
+      button.setAttribute("aria-label", flag ? t("figure.flag", { letter: ch }) : t("figure.plain", { letter: ch }));
+      const label = document.createElement("span");
+      label.textContent = t("figure.letter", { letter: ch });
+      const img = document.createElement("img");
+      img.src = "assets/svg/padded/" + logic.tokenFileName({ letter: ch, flag });
+      img.alt = "";
+      button.append(label, img);
+      container.appendChild(button);
+    }
   }
-
-  // 下段：a〜z（旗あり）
-  for (let i = 0; i < 26; i++) {
-    const ch = String.fromCharCode(65 + i);
-    const div = document.createElement("div");
-    div.className = "grid-cell";
-    div.innerHTML = `
-      <div>${ch}</div>
-      <img src="assets/svg/padded/${ch}f.svg" data-char="${ch}" data-flag="true">
-    `;
-    container.appendChild(div);
-  }
-
-  // イベント登録（共通処理）
-  container.querySelectorAll("img").forEach(img => {
-    img.addEventListener("click", () => {
-      const char = img.dataset.char;
-      const flag = img.dataset.flag === "true";
-      appendDecryption(char, flag);
-    });
-  });
 }
 
 function appendDecryption(char, flag) {
-  const svgFolder = "assets/svg/tight/";
-  const filename = flag ? `${char}f.svg` : `${char}.svg`;
-
-  const img = document.createElement("img");
-  img.src = `${svgFolder}${filename}`;
-  img.alt = char;
-  document.getElementById("decrypt-image-line").appendChild(img);
-
-  const output = document.getElementById("decrypt-output");
-  output.textContent += char + (flag ? " " : "");
+  if (logic.countLetters(decryptionLines) >= logic.MAX_INPUT_LENGTH) {
+    document.getElementById("decode-status").textContent = t("decode.tooLong", { max: "2,000" });
+    return;
+  }
+  decryptionLines.at(-1).push({ letter: char, flag });
+  updateDecryption();
 }
 
-function clearDecryption() {
-  document.getElementById("decrypt-image-line").innerHTML = "";
-  document.getElementById("decrypt-output").textContent = "";
+function updateDecryption() {
+  renderFigures(document.getElementById("decrypt-image-line"), decryptionLines);
+  document.getElementById("decrypt-output").textContent = logic.decodeTokens(decryptionLines);
+  document.getElementById("copy-toast").textContent = "";
+  document.getElementById("decode-status").textContent = "";
 }
 
-function removeLastDecryption() {
-  const imageLine = document.getElementById("decrypt-image-line");
-  const output = document.getElementById("decrypt-output");
-  if (imageLine.lastChild) imageLine.removeChild(imageLine.lastChild);
-
-  // 現在の出力を取得
-  let current = output.textContent;
-
-  // 末尾が空白なら空白 + 直前の1文字削除、そうでなければ1文字だけ削除
-  if (current.endsWith(" ")) {
-    output.textContent = current.slice(0, -2);
-  } else {
-    output.textContent = current.slice(0, -1);
+function decodePaste() {
+  const parsed = logic.parseCipherText(document.getElementById("cipher-paste").value);
+  const status = document.getElementById("decode-status");
+  if (logic.countLetters(parsed.lines) > logic.MAX_INPUT_LENGTH) {
+    status.textContent = t("decode.tooLong", { max: "2,000" });
+    return;
+  }
+  decryptionLines = parsed.lines;
+  updateDecryption();
+  if (parsed.invalid.length) {
+    status.textContent = t("decode.invalid", { chars: parsed.invalid.slice(0, 10) }) +
+      (parsed.invalid.length > 10 ? t("decode.more", { count: parsed.invalid.length - 10 }) : "");
   }
 }
 
+function clearDecryption() {
+  decryptionLines = [[]];
+  document.getElementById("cipher-paste").value = "";
+  updateDecryption();
+}
+
+function removeLastDecryption() {
+  if (!decryptionLines.at(-1).length && decryptionLines.length > 1) decryptionLines.pop();
+  else decryptionLines.at(-1).pop();
+  updateDecryption();
+}
+
 function copyDecryption() {
-  const outputText = document.getElementById("decrypt-output").textContent;
-  navigator.clipboard.writeText(outputText).then(() => {
-    const toast = document.getElementById("copy-toast");
-    toast.classList.add("show");
-    setTimeout(() => {
-      toast.classList.remove("show");
-    }, 2000);
-  });
+  return copyText(logic.decodeTokens(decryptionLines), document.getElementById("copy-toast"), t("copy.decryptSuccess"));
 }
