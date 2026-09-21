@@ -83,19 +83,30 @@ button {
 .svg-line {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  margin-bottom: 0.25rem;
+  align-items: flex-end;
+  padding-inline: 8px;
+  margin-bottom: 0.5rem;
+}
+
+.svg-line.is-blank {
+  min-height: 1.5rem;
 }
 
 .svg-output {
   display: block;
   margin-bottom: 1rem;
+  background: #ffffff;
+  border: 1px solid #767676;
+  border-radius: 4px;
+  padding: 0.75rem;
+  min-height: 4.5rem;
 }
 
-.svg-output img {
-  width: 48px;
-  height: 48px;
-  margin: 0;
+.svg-line img {
+  width: auto;
+  height: auto;
+  margin-inline: -5pt;
+  mix-blend-mode: multiply;
   padding: 0;
   display: inline-block;
   vertical-align: top;

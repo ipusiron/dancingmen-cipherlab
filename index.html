@@ -47,6 +47,8 @@
         </div>
         <button type="button" id="encrypt-button">暗号化</button>
         <div id="output" class="svg-output"></div>
+        <button type="button" id="save-png" disabled>暗号文をPNGで保存</button>
+        <div id="save-status" role="status"></div>
         <div>
           <h3>暗号文（ファイル名の列）</h3>
           <pre id="ciphertext" class="cipher-output"></pre>
@@ -71,7 +73,7 @@
           <div id="decrypt-buttons" class="key-table"></div>
 
           <h3>入力した人形：</h3>
-          <div id="decrypt-image-line" class="svg-line"></div>
+          <div id="decrypt-image-line" class="svg-output"></div>
         </div>
 
         <div class="decrypt-control-area" style="margin-top: 1rem">

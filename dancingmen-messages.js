@@ -17,7 +17,11 @@ const DancingMenMessages = (() => {
       "sample.multiline": "（2行）",
       "sample.all": "{count}通すべて（空行で区切る）",
       "copy.fontSuccess": "フォント用の文字列をコピーしました",
-      "copy.failure": "コピーできませんでした。文字列を選択して手動でコピーしてください"
+      "copy.failure": "コピーできませんでした。文字列を選択して手動でコピーしてください",
+      "save.tooLarge": "画像が大きすぎて保存できません。1行を短くするか、行数を減らしてください",
+      "save.unavailable": "このページをfile://で開いているときはPNGを保存できません。" +
+        "公開ページか、ローカルサーバー（python -m http.server など）で開いてください",
+      "save.success": "暗号文をPNGで保存しました"
     }
   };
 

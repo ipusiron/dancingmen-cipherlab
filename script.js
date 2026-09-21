@@ -3,6 +3,10 @@
 const logic = DancingMenLogic;
 const t = (key, values) => DancingMenMessages.format(DancingMenMessages.DEFAULT_LANG, key, values);
 let compositionCommitValue = null;
+let encryptedLines = [[]];
+const decryptionFigures = [];
+const exportImages = new Map();
+const EXPORT_SCALE = 2;
 
 document.addEventListener("DOMContentLoaded", () => {
   document.body.addEventListener("click", (e) => {
@@ -38,6 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
     encrypt();
   });
   document.getElementById("copy-font").addEventListener("click", copyFontText);
+  document.getElementById("save-png").addEventListener("click", savePng);
 });
 
 function closeModal() {
@@ -65,7 +70,6 @@ function showValidationFeedback(validationResult) {
 }
 
 function encrypt() {
-  const svgFolder = "assets/svg/tight/";
   const plaintext = document.getElementById("plaintext");
   const rawInput = plaintext.value;
   const caret = plaintext.selectionStart;
@@ -80,23 +84,85 @@ function encrypt() {
   }
   showValidationFeedback(validationResult);
   const lines = logic.encryptText(validationResult.text);
+  encryptedLines = lines;
   document.getElementById("char-count").textContent = t("encrypt.count", { count: logic.countLetters(lines) });
   document.getElementById("ciphertext").textContent = logic.toFileNameText(lines);
   document.getElementById("fonttext").textContent = logic.toFontText(lines);
   document.getElementById("font-copy-status").textContent = "";
-  outputArea.replaceChildren();
+  document.getElementById("save-status").textContent = "";
+  document.getElementById("save-png").disabled = logic.countLetters(lines) === 0;
+  renderFigures(outputArea, lines);
+}
 
+function renderFigures(container, lines) {
+  container.replaceChildren();
   for (const line of lines) {
     const lineDiv = document.createElement("div");
     lineDiv.className = "svg-line";
-    outputArea.appendChild(lineDiv);
+    if (!line.length) lineDiv.classList.add("is-blank");
+    container.appendChild(lineDiv);
     for (const token of line) {
       const img = document.createElement("img");
-      img.src = svgFolder + logic.tokenFileName(token);
+      img.src = "assets/svg/full/" + logic.tokenFileName(token);
       img.alt = token.flag ? t("figure.flag", { letter: token.letter }) : t("figure.letter", { letter: token.letter });
       img.title = img.alt;
       lineDiv.appendChild(img);
     }
+  }
+}
+
+async function exportImage(name) {
+  if (!exportImages.has(name)) {
+    const img = new Image();
+    img.src = "assets/svg/full/" + name;
+    exportImages.set(name, img.decode().then(() => img).catch(error => {
+      exportImages.delete(name);
+      throw error;
+    }));
+  }
+  return exportImages.get(name);
+}
+
+async function savePng() {
+  const status = document.getElementById("save-status");
+  const layout = logic.layoutCipher(encryptedLines);
+  if (!layout.figures.length) return;
+  if (layout.width > 8000 || layout.height > 8000) {
+    status.textContent = t("save.tooLarge");
+    return;
+  }
+  if (location.protocol === "file:") {
+    status.textContent = t("save.unavailable");
+    return;
+  }
+  let url;
+  try {
+    const names = [...new Set(layout.figures.map(figure => figure.name))];
+    const images = new Map(await Promise.all(names.map(async name => [name, await exportImage(name)])));
+    const canvas = document.createElement("canvas");
+    canvas.width = layout.width * EXPORT_SCALE;
+    canvas.height = layout.height * EXPORT_SCALE;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Canvas unavailable");
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.globalCompositeOperation = "multiply";
+    for (const figure of layout.figures) {
+      context.drawImage(images.get(figure.name), figure.x * EXPORT_SCALE, figure.y * EXPORT_SCALE,
+        figure.w * EXPORT_SCALE, figure.h * EXPORT_SCALE);
+    }
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+    if (!blob) throw new Error("Empty PNG");
+    url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "dancingmen-cipher.png";
+    link.click();
+    status.textContent = t("save.success");
+  } catch {
+    status.textContent = t("save.unavailable");
+  } finally {
+    if (url) URL.revokeObjectURL(url);
   }
 }
 
@@ -187,27 +253,23 @@ function generateDecryptButtons() {
 }
 
 function appendDecryption(char, flag) {
-  const svgFolder = "assets/svg/tight/";
-  const filename = flag ? `${char}f.svg` : `${char}.svg`;
-
-  const img = document.createElement("img");
-  img.src = `${svgFolder}${filename}`;
-  img.alt = char;
-  document.getElementById("decrypt-image-line").appendChild(img);
+  decryptionFigures.push({ letter: char, flag });
+  renderFigures(document.getElementById("decrypt-image-line"), [decryptionFigures]);
 
   const output = document.getElementById("decrypt-output");
   output.textContent += char + (flag ? " " : "");
 }
 
 function clearDecryption() {
-  document.getElementById("decrypt-image-line").innerHTML = "";
+  decryptionFigures.length = 0;
+  renderFigures(document.getElementById("decrypt-image-line"), [decryptionFigures]);
   document.getElementById("decrypt-output").textContent = "";
 }
 
 function removeLastDecryption() {
-  const imageLine = document.getElementById("decrypt-image-line");
   const output = document.getElementById("decrypt-output");
-  if (imageLine.lastChild) imageLine.removeChild(imageLine.lastChild);
+  decryptionFigures.pop();
+  renderFigures(document.getElementById("decrypt-image-line"), [decryptionFigures]);
 
   // 現在の出力を取得
   let current = output.textContent;
