@@ -1,5 +1,9 @@
 // script.js
 
+const logic = DancingMenLogic;
+const t = (key, values) => DancingMenMessages.format(DancingMenMessages.DEFAULT_LANG, key, values);
+let compositionCommitValue = null;
+
 document.addEventListener("DOMContentLoaded", () => {
   document.body.addEventListener("click", (e) => {
     if (e.target.matches(".key-entry img")) {
@@ -15,6 +19,25 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   generateDecryptButtons();
+  const plaintext = document.getElementById("plaintext");
+  plaintext.addEventListener("input", event => {
+    if (event.isComposing) return;
+    const duplicateCommit = compositionCommitValue === plaintext.value;
+    compositionCommitValue = null;
+    if (!duplicateCommit) encrypt();
+  });
+  plaintext.addEventListener("compositionend", () => {
+    encrypt();
+    compositionCommitValue = plaintext.value;
+  });
+  document.getElementById("encrypt-button").addEventListener("click", encrypt);
+  generateSamples();
+  document.getElementById("sample-load").addEventListener("click", () => {
+    const id = document.getElementById("sample-select").value;
+    plaintext.value = id === "all" ? logic.allSamplesText() : logic.SAMPLES.find(sample => sample.id === id).text;
+    encrypt();
+  });
+  document.getElementById("copy-font").addEventListener("click", copyFontText);
 });
 
 function closeModal() {
@@ -34,97 +57,74 @@ function switchTab(tabName) {
   if (tabName === "table") generateTable();
 }
 
-function validateAndSanitizeInput(input) {
-  // 許可する文字: A-Z, a-z, スペース、改行
-  const allowedPattern = /[^A-Za-z\s\n\r]/g;
-  const invalidChars = input.match(allowedPattern);
-  
-  // 無効な文字を削除
-  const sanitized = input.replace(allowedPattern, '');
-  
-  return {
-    sanitized: sanitized,
-    hasInvalidChars: invalidChars !== null,
-    invalidChars: invalidChars ? [...new Set(invalidChars)] : [],
-    validCharCount: sanitized.replace(/[\s\n\r]/g, '').length
-  };
-}
-
 function showValidationFeedback(validationResult) {
   const feedbackElement = document.getElementById('validation-feedback');
-  const charCountElement = document.getElementById('char-count');
-  
-  if (!feedbackElement || !charCountElement) return;
-  
-  // 文字数の更新
-  charCountElement.textContent = `暗号化可能文字数: ${validationResult.validCharCount}`;
-  
-  // エラーメッセージの表示/非表示
-  if (validationResult.hasInvalidChars) {
-    feedbackElement.textContent = `無効な文字が削除されました: ${validationResult.invalidChars.join(', ')}`;
-    feedbackElement.style.display = 'block';
-    feedbackElement.classList.add('show');
-    
-    // 3秒後にフェードアウト
-    setTimeout(() => {
-      feedbackElement.classList.remove('show');
-      setTimeout(() => {
-        feedbackElement.style.display = 'none';
-      }, 300);
-    }, 3000);
-  }
+  const items = logic.feedbackItems(validationResult);
+  feedbackElement.textContent = items.map(item => t(item.key, item.values)).join(t("feedback.separator"));
+  feedbackElement.classList.toggle("show", items.length > 0);
 }
 
 function encrypt() {
   const svgFolder = "assets/svg/tight/";
-  const rawInput = document.getElementById("plaintext").value;
+  const plaintext = document.getElementById("plaintext");
+  const rawInput = plaintext.value;
+  const caret = plaintext.selectionStart;
   const outputArea = document.getElementById("output");
-  const textArea = document.getElementById("ciphertext");
-  
-  // 入力をバリデーション
-  const validationResult = validateAndSanitizeInput(rawInput);
-  const input = validationResult.sanitized;
-  
-  // バリデーション結果を表示
-  showValidationFeedback(validationResult);
-  
-  // 元の入力と異なる場合は、サニタイズされた値で更新
-  if (rawInput !== input) {
-    document.getElementById("plaintext").value = input;
-  }
-  
-  outputArea.innerHTML = "";
-  textArea.textContent = "";
+  const validationResult = logic.sanitizeInput(rawInput);
 
-  const lines = input.split(/\r?\n/);
-  let cipherText = "";
+  // 正規化した分だけキャレットの位置を補正する。
+  if (rawInput !== validationResult.text) {
+    plaintext.value = validationResult.text;
+    const nextCaret = logic.caretAfterSanitize(rawInput, caret);
+    plaintext.setSelectionRange(nextCaret, nextCaret);
+  }
+  showValidationFeedback(validationResult);
+  const lines = logic.encryptText(validationResult.text);
+  document.getElementById("char-count").textContent = t("encrypt.count", { count: logic.countLetters(lines) });
+  document.getElementById("ciphertext").textContent = logic.toFileNameText(lines);
+  document.getElementById("fonttext").textContent = logic.toFontText(lines);
+  document.getElementById("font-copy-status").textContent = "";
+  outputArea.replaceChildren();
 
   for (const line of lines) {
-    const letters = line.split("");
     const lineDiv = document.createElement("div");
     lineDiv.className = "svg-line";
     outputArea.appendChild(lineDiv);
-
-    for (let i = 0; i < letters.length; i++) {
-      const char = letters[i];
-      const upperChar = char.toUpperCase();
-      if ((char >= 'A' && char <= 'Z') || (char >= 'a' && char <= 'z')) {
-        const next = letters[i + 1];
-        const useFlag = (next === " ");
-        const filename = useFlag ? `${upperChar}f.svg` : `${upperChar}.svg`;
-
-        const img = document.createElement("img");
-        img.src = `${svgFolder}${filename}`;
-        img.alt = upperChar;
-        img.title = char + (useFlag ? " (旗あり)" : "");
-        lineDiv.appendChild(img);
-
-        cipherText += filename + " ";
-      }
+    for (const token of line) {
+      const img = document.createElement("img");
+      img.src = svgFolder + logic.tokenFileName(token);
+      img.alt = token.flag ? t("figure.flag", { letter: token.letter }) : t("figure.letter", { letter: token.letter });
+      img.title = img.alt;
+      lineDiv.appendChild(img);
     }
-    cipherText += "\n";
   }
-  textArea.textContent = cipherText.trim();
+}
+
+function generateSamples() {
+  const select = document.getElementById("sample-select");
+  logic.SAMPLES.forEach((sample, index) => {
+    const option = document.createElement("option");
+    option.value = sample.id;
+    const text = sample.text.split("\n").join(t("sample.lineSeparator"));
+    option.textContent = t("sample.label", { number: index + 1, text }) +
+      (sample.text.includes("\n") ? t("sample.multiline") : "");
+    select.appendChild(option);
+  });
+  const all = document.createElement("option");
+  all.value = "all";
+  all.textContent = t("sample.all", { count: logic.SAMPLES.length });
+  select.appendChild(all);
+}
+
+async function copyFontText() {
+  const status = document.getElementById("font-copy-status");
+  try {
+    if (!navigator.clipboard || typeof navigator.clipboard.writeText !== "function") throw new Error("Clipboard unavailable");
+    await navigator.clipboard.writeText(document.getElementById("fonttext").textContent);
+    status.textContent = t("copy.fontSuccess");
+  } catch {
+    status.textContent = t("copy.failure");
+  }
 }
 
 function generateTable() {

@@ -1,5 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 const L = require("../dancingmen-logic.js");
 const M = require("../dancingmen-messages.js");
 
@@ -31,4 +33,11 @@ test("dictionary values are complete and unknown keys throw", () => {
     const values = Object.fromEntries([...template.matchAll(/\{([^}]+)\}/g)].map(match => [match[1], "test"]));
     assert.doesNotMatch(M.format("ja", key, values), /\{/);
   }
+});
+
+test("UI message keys exist in the Japanese dictionary", () => {
+  const source = fs.readFileSync(path.join(__dirname, "../script.js"), "utf8");
+  const keys = [...source.matchAll(/\bt\(["']([^"']+)["']/g)].map(match => match[1]);
+  assert.ok(keys.length > 0);
+  for (const key of keys) assert.ok(Object.hasOwn(M.dictionaries.ja, key), key);
 });

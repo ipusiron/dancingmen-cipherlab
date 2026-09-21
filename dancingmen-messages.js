@@ -7,7 +7,17 @@ const DancingMenMessages = (() => {
       "list.close": "」",
       "feedback.removed": "使えない文字を取り除きました: {chars}",
       "feedback.replaced": "全角の英字・スペースやタブを半角に置き換えました",
-      "feedback.truncated": "{max}文字を超えた分は切り捨てました"
+      "feedback.truncated": "{max}文字を超えた分は切り捨てました",
+      "feedback.separator": " ／ ",
+      "encrypt.count": "暗号化可能文字数: {count}",
+      "figure.letter": "{letter}",
+      "figure.flag": "{letter}（旗あり）",
+      "sample.label": "{number}通目 {text}",
+      "sample.lineSeparator": "／",
+      "sample.multiline": "（2行）",
+      "sample.all": "{count}通すべて（空行で区切る）",
+      "copy.fontSuccess": "フォント用の文字列をコピーしました",
+      "copy.failure": "コピーできませんでした。文字列を選択して手動でコピーしてください"
     }
   };
 

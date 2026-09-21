@@ -258,5 +258,6 @@ footer {
 }
 
 .validation-feedback.show {
+  display: block;
   opacity: 1;
 }
