@@ -17,7 +17,7 @@ test("HTML security, local classic script order and no inline code", () => {
   assert.doesNotMatch(html, /\s(?:on\w+|style)\s*=/i);
   assert.doesNotMatch(html, /<script[^>]*type=["']module["']/i);
   assert.deepEqual([...html.matchAll(/<script[^>]*src="([^"]+)"/g)].map(match => match[1]), [
-    "dancingmen-messages.js", "dancingmen-logic.js", "script.js"
+    "dancingmen-messages.js", "i18n.js", "dancingmen-logic.js", "script.js"
   ]);
   assert.doesNotMatch(html, /<(?:script|link|img)\b[^>]*(?:src|href)=["']https?:\/\//i);
   for (const match of html.matchAll(/<a\b[^>]*target="_blank"[^>]*>/g)) {
@@ -29,7 +29,8 @@ test("accessible tabs, dialog, textareas and all required element IDs", () => {
   const ids = [
     "plaintext", "validation-feedback", "char-count", "sample-select", "sample-load", "output", "ciphertext",
     "fonttext", "copy-font", "save-png", "save-status", "decrypt-buttons", "decrypt-grid-plain", "decrypt-grid-flag",
-    "decrypt-image-line", "cipher-paste", "decode-paste", "decrypt-output", "modal", "modal-img", "modal-close"
+    "decrypt-image-line", "cipher-paste", "decode-paste", "decrypt-output", "modal", "modal-img", "modal-close",
+    "langToggle"
   ];
   for (const id of ids) assert.equal([...html.matchAll(new RegExp(`id="${id}"`, "g"))].length, 1, id);
   assert.match(html, /<dialog id="modal"[^>]*aria-label=/);

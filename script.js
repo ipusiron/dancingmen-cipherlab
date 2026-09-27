@@ -1,15 +1,17 @@
 // script.js
 
 const logic = DancingMenLogic;
-const t = (key, values) => DancingMenMessages.format(DancingMenMessages.DEFAULT_LANG, key, values);
+const t = (key, values) => I18n.t(key, values);
 let compositionCommitValue = null;
 let encryptedLines = [[]];
 let decryptionLines = [[]];
 let modalTrigger = null;
 const exportImages = new Map();
+const statusMessages = new Map();
 const EXPORT_SCALE = 2;
 
 document.addEventListener("DOMContentLoaded", () => {
+  I18n.init();
   const modal = document.getElementById("modal");
   document.querySelector("#table-panel .key-table").addEventListener("click", event => {
     const button = event.target.closest(".figure-zoom");
@@ -30,8 +32,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (tab) switchTab(tab.dataset.tab);
   });
   document.querySelector(".tab-menu").addEventListener("keydown", handleTabKey);
-  generateDecryptButtons();
-  generateTable();
   document.getElementById("decrypt-buttons").addEventListener("click", event => {
     const button = event.target.closest("button[data-char]");
     if (button) appendDecryption(button.dataset.char, button.dataset.flag === "true");
@@ -52,7 +52,6 @@ document.addEventListener("DOMContentLoaded", () => {
     compositionCommitValue = plaintext.value;
   });
   document.getElementById("encrypt-button").addEventListener("click", encrypt);
-  generateSamples();
   document.getElementById("sample-load").addEventListener("click", () => {
     const id = document.getElementById("sample-select").value;
     plaintext.value = id === "all" ? logic.allSamplesText() : logic.SAMPLES.find(sample => sample.id === id).text;
@@ -60,7 +59,29 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   document.getElementById("copy-font").addEventListener("click", copyFontText);
   document.getElementById("save-png").addEventListener("click", savePng);
+  document.getElementById("langToggle").addEventListener("click", toggleLanguage);
+  document.addEventListener("languagechange", renderLanguage);
+  renderLanguage();
 });
+
+function toggleLanguage() {
+  const languages = I18n.languages;
+  const next = languages[(languages.indexOf(I18n.language) + 1) % languages.length];
+  I18n.setLanguage(next);
+}
+
+// 言語が変わると、生成した人形のラベルやサンプルの見出しも作り直す必要がある。
+function renderLanguage() {
+  const shown = new Map(statusMessages);
+  generateDecryptButtons();
+  generateTable();
+  generateSamples();
+  encrypt();
+  updateDecryption();
+  statusMessages.clear();
+  for (const [id, value] of shown) statusMessages.set(id, value);
+  renderStatuses();
+}
 
 function closeModal() {
   document.getElementById("modal").close();
@@ -99,11 +120,32 @@ function handleTabKey(event) {
   }
 }
 
+// 表示中の文言そのものではなく{key, values}を覚えておき、訳すのは描く直前にする。
+// こうしておくと、言語を切り替えても出ているメッセージが消えない。
+function setStatus(id, items = [], separator = "") {
+  if (items.length) statusMessages.set(id, { items, separator });
+  else statusMessages.delete(id);
+  renderStatus(id);
+}
+
+function renderStatus(id) {
+  const element = document.getElementById(id);
+  if (!element) return;
+  const stored = statusMessages.get(id);
+  const items = stored ? stored.items : [];
+  const glue = stored && stored.separator ? t(stored.separator) : "";
+  element.textContent = items.map(item => t(item.key, item.values)).join(glue);
+  if (element.classList.contains("validation-feedback")) {
+    element.classList.toggle("show", items.length > 0);
+  }
+}
+
+function renderStatuses() {
+  for (const id of statusMessages.keys()) renderStatus(id);
+}
+
 function showValidationFeedback(validationResult) {
-  const feedbackElement = document.getElementById('validation-feedback');
-  const items = logic.feedbackItems(validationResult);
-  feedbackElement.textContent = items.map(item => t(item.key, item.values)).join(t("feedback.separator"));
-  feedbackElement.classList.toggle("show", items.length > 0);
+  setStatus("validation-feedback", logic.feedbackItems(validationResult), "feedback.separator");
 }
 
 function encrypt() {
@@ -125,8 +167,8 @@ function encrypt() {
   document.getElementById("char-count").textContent = t("encrypt.count", { count: logic.countLetters(lines) });
   document.getElementById("ciphertext").textContent = logic.toFileNameText(lines);
   document.getElementById("fonttext").textContent = logic.toFontText(lines);
-  document.getElementById("font-copy-status").textContent = "";
-  document.getElementById("save-status").textContent = "";
+  setStatus("font-copy-status");
+  setStatus("save-status");
   document.getElementById("save-png").disabled = logic.countLetters(lines) === 0;
   renderFigures(outputArea, lines);
 }
@@ -161,15 +203,14 @@ async function exportImage(name) {
 }
 
 async function savePng() {
-  const status = document.getElementById("save-status");
   const layout = logic.layoutCipher(encryptedLines);
   if (!layout.figures.length) return;
   if (layout.width > 8000 || layout.height > 8000) {
-    status.textContent = t("save.tooLarge");
+    setStatus("save-status", [{ key: "save.tooLarge", values: {} }]);
     return;
   }
   if (location.protocol === "file:") {
-    status.textContent = t("save.unavailable");
+    setStatus("save-status", [{ key: "save.unavailable", values: {} }]);
     return;
   }
   let url;
@@ -195,9 +236,9 @@ async function savePng() {
     link.href = url;
     link.download = "dancingmen-cipher.png";
     link.click();
-    status.textContent = t("save.success");
+    setStatus("save-status", [{ key: "save.success", values: {} }]);
   } catch {
-    status.textContent = t("save.unavailable");
+    setStatus("save-status", [{ key: "save.unavailable", values: {} }]);
   } finally {
     if (url) URL.revokeObjectURL(url);
   }
@@ -205,6 +246,8 @@ async function savePng() {
 
 function generateSamples() {
   const select = document.getElementById("sample-select");
+  const chosen = select.value;
+  select.replaceChildren();
   logic.SAMPLES.forEach((sample, index) => {
     const option = document.createElement("option");
     option.value = sample.id;
@@ -217,27 +260,28 @@ function generateSamples() {
   all.value = "all";
   all.textContent = t("sample.all", { count: logic.SAMPLES.length });
   select.appendChild(all);
+  if (chosen) select.value = chosen;
 }
 
 async function copyFontText() {
-  await copyText(document.getElementById("fonttext").textContent,
-    document.getElementById("font-copy-status"), t("copy.fontSuccess"));
+  await copyText(document.getElementById("fonttext").textContent, "font-copy-status", "copy.fontSuccess");
 }
 
-async function copyText(text, status, success) {
-  status.textContent = "";
+async function copyText(text, id, successKey) {
+  setStatus(id);
   try {
     if (!navigator.clipboard || typeof navigator.clipboard.writeText !== "function") throw new Error("Clipboard unavailable");
     await navigator.clipboard.writeText(text);
-    status.textContent = success;
+    setStatus(id, [{ key: successKey, values: {} }]);
   } catch {
-    status.textContent = t("copy.failure");
+    setStatus(id, [{ key: "copy.failure", values: {} }]);
   }
 }
 
 function generateTable() {
   const container = document.querySelector("#table-panel .key-table");
   if (!container) return;
+  container.replaceChildren();
   const svgFolder = "assets/svg/padded/";
   for (const ch of logic.LETTERS) {
     const div = document.createElement("div");
@@ -266,6 +310,7 @@ function generateTable() {
 function generateDecryptButtons() {
   for (const flag of [false, true]) {
     const container = document.getElementById(flag ? "decrypt-grid-flag" : "decrypt-grid-plain");
+    container.replaceChildren();
     for (const ch of logic.LETTERS) {
       const button = document.createElement("button");
       button.type = "button";
@@ -286,7 +331,7 @@ function generateDecryptButtons() {
 
 function appendDecryption(char, flag) {
   if (logic.countLetters(decryptionLines) >= logic.MAX_INPUT_LENGTH) {
-    document.getElementById("decode-status").textContent = t("decode.tooLong", { max: "2,000" });
+    setStatus("decode-status", [{ key: "decode.tooLong", values: { max: "2,000" } }]);
     return;
   }
   decryptionLines.at(-1).push({ letter: char, flag });
@@ -296,22 +341,24 @@ function appendDecryption(char, flag) {
 function updateDecryption() {
   renderFigures(document.getElementById("decrypt-image-line"), decryptionLines);
   document.getElementById("decrypt-output").textContent = logic.decodeTokens(decryptionLines);
-  document.getElementById("copy-toast").textContent = "";
-  document.getElementById("decode-status").textContent = "";
+  setStatus("copy-toast");
+  setStatus("decode-status");
 }
 
 function decodePaste() {
   const parsed = logic.parseCipherText(document.getElementById("cipher-paste").value);
-  const status = document.getElementById("decode-status");
   if (logic.countLetters(parsed.lines) > logic.MAX_INPUT_LENGTH) {
-    status.textContent = t("decode.tooLong", { max: "2,000" });
+    setStatus("decode-status", [{ key: "decode.tooLong", values: { max: "2,000" } }]);
     return;
   }
   decryptionLines = parsed.lines;
   updateDecryption();
   if (parsed.invalid.length) {
-    status.textContent = t("decode.invalid", { chars: parsed.invalid.slice(0, 10) }) +
-      (parsed.invalid.length > 10 ? t("decode.more", { count: parsed.invalid.length - 10 }) : "");
+    const items = [{ key: "decode.invalid", values: { chars: parsed.invalid.slice(0, 10) } }];
+    if (parsed.invalid.length > 10) {
+      items.push({ key: "decode.more", values: { count: parsed.invalid.length - 10 } });
+    }
+    setStatus("decode-status", items);
   }
 }
 
@@ -328,5 +375,5 @@ function removeLastDecryption() {
 }
 
 function copyDecryption() {
-  return copyText(logic.decodeTokens(decryptionLines), document.getElementById("copy-toast"), t("copy.decryptSuccess"));
+  return copyText(logic.decodeTokens(decryptionLines), "copy-toast", "copy.decryptSuccess");
 }

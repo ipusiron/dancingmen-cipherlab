@@ -10,33 +10,38 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <noscript>このツールはJavaScriptを有効にすると動きます。</noscript>
+    <noscript>このツールはJavaScriptを有効にすると動きます。 / This tool works once JavaScript is enabled.</noscript>
     <header>
+      <div class="lang-bar">
+        <button type="button" id="langToggle" class="lang-toggle" data-i18n="app.langButton"
+          data-i18n-aria-label="app.langAria">English</button>
+      </div>
       <h1>DancingMen CipherLab</h1>
-      <p>シャーロック・ホームズの「踊る人形」暗号を体験できるツールです。</p>
+      <p data-i18n="app.description">シャーロック・ホームズの「踊る人形」暗号を体験できるツールです。</p>
     </header>
 
-    <nav class="tab-menu" role="tablist" aria-label="暗号化・復号・置換表">
+    <nav class="tab-menu" role="tablist" data-i18n-aria-label="tabs.aria" aria-label="暗号化・復号・置換表">
       <button type="button" class="tab-button active" role="tab" id="tab-encrypt" data-tab="encrypt"
-        aria-controls="encrypt-panel" aria-selected="true" tabindex="0">
+        aria-controls="encrypt-panel" aria-selected="true" tabindex="0" data-i18n="tab.encrypt">
         🔐 暗号化
       </button>
       <button type="button" class="tab-button" role="tab" id="tab-decrypt" data-tab="decrypt"
-        aria-controls="decrypt-panel" aria-selected="false" tabindex="-1">🔓 復号</button>
+        aria-controls="decrypt-panel" aria-selected="false" tabindex="-1" data-i18n="tab.decrypt">🔓 復号</button>
       <button type="button" class="tab-button" role="tab" id="tab-table" data-tab="table"
-        aria-controls="table-panel" aria-selected="false" tabindex="-1">📓 置換表</button>
+        aria-controls="table-panel" aria-selected="false" tabindex="-1" data-i18n="tab.table">📓 置換表</button>
     </nav>
 
     <main>
       <section id="encrypt-panel" class="tab-panel active" role="tabpanel" aria-labelledby="tab-encrypt">
-        <h2>🔐 暗号化</h2>
-        <label for="plaintext"
+        <h2 data-i18n="tab.encrypt">🔐 暗号化</h2>
+        <label for="plaintext" data-i18n="encrypt.inputLabel"
           >平文を入力してください（A〜Zとスペース、改行）</label
         >
         <textarea
           id="plaintext"
           rows="3"
           placeholder="HELLO WORLD のように入力"
+          data-i18n-placeholder="encrypt.placeholder"
           maxlength="2000"
           spellcheck="false"
           autocomplete="off"
@@ -44,113 +49,119 @@
           aria-describedby="input-hint validation-feedback"
         ></textarea>
         <div class="input-guide">
-          <small id="input-hint">A〜Zとスペース、改行が使えます。全角の英字とスペースは半角に置き換えます。</small>
+          <small id="input-hint" data-i18n="encrypt.hint">A〜Zとスペース、改行が使えます。全角の英字とスペースは半角に置き換えます。</small>
           <small id="char-count" class="char-count">暗号化可能文字数: 0</small>
         </div>
         <div id="validation-feedback" class="validation-feedback" role="status"></div>
         <div class="sample-controls">
-          <label for="sample-select">原作の暗号文</label>
+          <label for="sample-select" data-i18n="sample.legend">原作の暗号文</label>
           <select id="sample-select"></select>
-          <button type="button" id="sample-load">入力欄に入れる</button>
+          <button type="button" id="sample-load" data-i18n="sample.load">入力欄に入れる</button>
         </div>
-        <button type="button" id="encrypt-button">暗号化</button>
+        <button type="button" id="encrypt-button" data-i18n="encrypt.button">暗号化</button>
         <div id="output" class="svg-output"></div>
-        <button type="button" id="save-png" disabled>暗号文をPNGで保存</button>
+        <button type="button" id="save-png" data-i18n="save.button" disabled>暗号文をPNGで保存</button>
         <div id="save-status" role="status"></div>
         <div>
-          <h3>暗号文（ファイル名の列）</h3>
+          <h3 data-i18n="output.filenames">暗号文（ファイル名の列）</h3>
           <pre id="ciphertext" class="cipher-output"></pre>
         </div>
         <div>
-          <h3>暗号文（GL-DancingMenフォント用の文字列）</h3>
+          <h3 data-i18n="output.font">暗号文（GL-DancingMenフォント用の文字列）</h3>
           <pre id="fonttext" class="cipher-output"></pre>
-          <p>小文字が旗なし、大文字が旗あり。GL-DancingMenフォントを指定すると、そのまま踊る人形になります。復号タブへ貼り付けると元の文に戻せます。</p>
-          <button type="button" id="copy-font">フォント用の文字列をコピー</button>
+          <p data-i18n="output.fontNote">小文字が旗なし、大文字が旗あり。GL-DancingMenフォントを指定すると、そのまま踊る人形になります。復号タブへ貼り付けると元の文に戻せます。</p>
+          <button type="button" id="copy-font" data-i18n="copy.fontButton">フォント用の文字列をコピー</button>
           <div id="font-copy-status" class="status-message" role="status"></div>
         </div>
       </section>
 
       <section id="decrypt-panel" class="tab-panel" role="tabpanel" aria-labelledby="tab-decrypt" hidden>
-        <h2>🔓 復号</h2>
-        <p>
+        <h2 data-i18n="tab.decrypt">🔓 復号</h2>
+        <p data-i18n="decrypt.intro">
           下の人形をクリックするか、Tabで選んでEnterを押すと、対応する文字を復元できます。
         </p>
 
         <div class="decrypt-input-area">
-          <p>▼ 以下の人形を選んで復号対象に追加します。</p>
+          <p data-i18n="decrypt.pick">▼ 以下の人形を選んで復号対象に追加します。</p>
           <div id="decrypt-buttons">
-            <h3>旗なし</h3>
+            <h3 data-i18n="decrypt.plainHeading">旗なし</h3>
             <div class="decrypt-grid" id="decrypt-grid-plain"></div>
-            <h3>旗あり（語の終わり）</h3>
+            <h3 data-i18n="decrypt.flagHeading">旗あり（語の終わり）</h3>
             <div class="decrypt-grid" id="decrypt-grid-flag"></div>
           </div>
 
-          <label for="cipher-paste">暗号文のテキストを貼り付ける（フォント用の文字列、またはファイル名の列）</label>
+          <label for="cipher-paste" data-i18n="decrypt.pasteLabel">暗号文のテキストを貼り付ける（フォント用の文字列、またはファイル名の列）</label>
           <textarea id="cipher-paste" rows="3" maxlength="20000" spellcheck="false"></textarea>
-          <button type="button" id="decode-paste">貼り付けた暗号文を復号</button>
+          <button type="button" id="decode-paste" data-i18n="decrypt.pasteButton">貼り付けた暗号文を復号</button>
           <div id="decode-status" class="status-message" role="status"></div>
 
-          <h3>入力した人形</h3>
+          <h3 data-i18n="decrypt.figuresHeading">入力した人形</h3>
           <div id="decrypt-image-line" class="svg-output"></div>
         </div>
 
         <div class="decrypt-control-area">
-          <button type="button" id="decrypt-clear">クリア</button>
-          <button type="button" id="decrypt-delete">1文字削除</button>
+          <button type="button" id="decrypt-clear" data-i18n="decrypt.clear">クリア</button>
+          <button type="button" id="decrypt-delete" data-i18n="decrypt.delete">1文字削除</button>
         </div>
 
         <div class="decrypt-output-area">
-          <h3>復号結果</h3>
+          <h3 data-i18n="decrypt.resultHeading">復号結果</h3>
           <pre id="decrypt-output" class="cipher-output"></pre>
-          <button type="button" id="copy-decryption">復号結果をコピー</button>
+          <button type="button" id="copy-decryption" data-i18n="copy.decryptButton">復号結果をコピー</button>
         </div>
         <div id="copy-toast" class="status-message" role="status"></div>
       </section>
 
       <section id="table-panel" class="tab-panel" role="tabpanel" aria-labelledby="tab-table" hidden>
-        <h2>📓 置換表</h2>
+        <h2 data-i18n="tab.table">📓 置換表</h2>
         <p>
-          以下はアルファベットと踊る人形の対応表です（平文文字がアルファベット、暗号化文字が人形文字）。<br /><strong
+          <span data-i18n="table.intro"
+            >以下はアルファベットと踊る人形の対応表です（平文文字がアルファベット、暗号化文字が人形文字）。</span
+          ><br /><strong data-i18n="table.zoomHint"
             >クリック、またはTabで選んでEnterを押すと拡大表示されます。</strong
           >
         </p>
         <div class="key-table"></div>
-        <h3>🚩 旗ありの意味</h3>
+        <h3 data-i18n="table.flagHeading">🚩 旗ありの意味</h3>
         <p>
-          「旗あり」の人形は、その直後に
-          <strong>空白が来る</strong>ことを示します。続く行に英字がある場合も、行末の文字に旗が付きます。空行は通の区切りです。<br />
-          たとえば "HELLO WORLD" では、"O" の次がスペースなので
-          "Of.svg"（旗付き）が使われます。
+          <span data-i18n="table.flagLead">「旗あり」の人形は、その直後に</span
+          ><strong data-i18n="table.flagStrong">空白が来る</strong
+          ><span data-i18n="table.flagRest"
+            >ことを示します。続く行に英字がある場合も、行末の文字に旗が付きます。空行は通の区切りです。</span
+          ><br /><span data-i18n="table.flagExample"
+            >たとえば "HELLO WORLD" では、"O" の次がスペースなので "Of.svg"（旗付き）が使われます。</span
+          >
         </p>
         <p>
-          サンプル：<img
+          <span data-i18n="table.sampleLabel">サンプル：</span><img
             src="assets/svg/padded/Of.svg"
-            alt="Of"
+            alt="Of（旗あり）"
+            data-i18n-alt="table.sampleAlt"
             class="sample-figure"
-          />
-          は "O" + 空白
+          /><span data-i18n="table.sampleNote"> は "O" + 空白</span>
         </p>
       </section>
     </main>
 
     <!-- モーダル -->
-    <dialog id="modal" class="modal" aria-label="人形の拡大表示">
+    <dialog id="modal" class="modal" data-i18n-aria-label="modal.aria" aria-label="人形の拡大表示">
       <img id="modal-img" class="modal-img" alt="" />
-      <button type="button" id="modal-close">閉じる</button>
+      <button type="button" id="modal-close" data-i18n="modal.close">閉じる</button>
     </dialog>
 
     <footer>
       <div class="footer">
-        🔗 GitHubリポジトリはこちら（<a
+        <span data-i18n="footer.repo">🔗 GitHubリポジトリはこちら（</span><a
           href="https://github.com/ipusiron/dancingmen-cipherlab"
           target="_blank"
           rel="noopener noreferrer"
           >ipusiron/dancingmen-cipherlab</a
-        >）
+        ><span data-i18n="footer.repoEnd">）</span>
       </div>
     </footer>
 
     <script src="dancingmen-messages.js"></script>
+    <script src="i18n.js"></script>
     <script src="dancingmen-logic.js"></script>
     <script src="script.js"></script>
   </body>
