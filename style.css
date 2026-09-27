@@ -47,6 +47,26 @@ header {
   text-align: center;
 }
 
+.lang-bar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.lang-toggle {
+  background-color: var(--color-button-bg);
+  color: var(--color-button-text);
+  border: 1px solid var(--color-tab-active-bg);
+  border-radius: 4px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  min-height: 2.25rem;
+}
+
+.lang-toggle:hover {
+  background-color: var(--color-button-hover-bg);
+}
+
 main, .tab-menu {
   max-width: 800px;
   margin: 0 auto;
@@ -67,8 +87,10 @@ main {
 
 .tab-button {
   flex: 1 1 0;
+  /* 英語の見出しは日本語より長い。折り返せるようにして横スクロールを防ぐ。 */
+  min-width: 0;
+  white-space: normal;
   padding: 0.75rem 0.5rem;
-  white-space: nowrap;
   border: none;
   background: var(--color-tab-bg);
   font-size: 1rem;

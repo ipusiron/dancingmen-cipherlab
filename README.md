@@ -33,6 +33,8 @@ hub: true
 ---
 -->
 
+[English](README.en.md) · 日本語
+
 # DancingMen CipherLab - ドイルの踊る人形暗号ツール
 
 ![GitHub Repo stars](https://img.shields.io/github/stars/ipusiron/dancingmen-cipherlab?style=social)
@@ -99,7 +101,7 @@ hub: true
 ### その他の機能
 
 - レスポンシブデザイン対応
-- 日本語UI（シャーロキアン向け）
+- 日本語UIと英語UIの切り替え（右上のボタン。選択はブラウザーに記憶され、`?lang=ja`・`?lang=en`でも指定可能）
 - 純粋なクライアントサイド実装（外部API不要）
 - タブ・復号ボタン・置換表の拡大をキーボードだけで操作可能
 
@@ -187,7 +189,7 @@ hub: true
 - **SVGの3バージョン管理**: full版（表示・PNG保存用）、padded版（参照・選択用）、tight版（full版の生成元）
 - **モーダルシステム**: ネイティブのdialog要素による置換表の画像拡大
 - **イベント駆動設計**: 効率的なイベントデリゲーションによるUI制御
-- **分離**: 純粋ロジックはdancingmen-logic.js、文言の辞書はdancingmen-messages.js、画面処理はscript.js
+- **分離**: 純粋ロジックはdancingmen-logic.js、文言の辞書はdancingmen-messages.js、言語の選択はi18n.js、画面処理はscript.js
 
 ---
 ## 🖋 使用フォントについて
@@ -288,8 +290,14 @@ full版は`node tools/build-full-svg.js`で作り直せます。
 
 置換表の拡大にはネイティブの`dialog.showModal()`を使い、Esc・閉じるボタン・背景クリックで閉じます。
 閉じた後は、開いたボタンへフォーカスを戻します。
-JavaScriptが表示する文言は`dancingmen-messages.js`の日本語辞書から`t`で取得します。
-英語辞書と言語切り替えは未実装です。
+JavaScriptが表示する文言は`dancingmen-messages.js`の辞書から`t`で取得します。
+辞書は日本語と英語が同じキーを共有し、`i18n.js`が選択中の言語を決めて`data-i18n`の付いた要素へ当てます。
+
+### 言語の切り替え
+
+`?lang=ja`・`?lang=en`、`localStorage`に保存した選択、ブラウザーの言語設定の順に見て、初期表示の言語を決めます。
+右上のボタンで切り替えると`languagechange`イベントが起き、人形の代替テキスト・置換表・サンプル一覧・状態メッセージを作り直します。
+入力欄の内容と復号中の人形は残ります。
 
 ---
 ## 🔒 セキュリティ
@@ -299,6 +307,7 @@ JavaScriptが表示する文言は`dancingmen-messages.js`の日本語辞書か�
 - 入力の正規化と長さ制限を実施。入力・貼り付け・メッセージはtextContentで表示
 - 外部API・CDN・アクセス解析を使用せず、ページの表示と操作で外部への通信は0件
 - コピーAPIが使えない、または拒否された場合は手動コピーの案内を表示
+- 入力した文はブラウザーの外に出ません。`localStorage`に保存するのは言語の選択だけです
 
 外部リンクをユーザーが開いたときは、そのリンク先へ通信します。
 metaのCSPではクリックジャッキングを防げません。
@@ -316,7 +325,7 @@ node tools/build-full-svg.js --check
 ```
 
 GitHub Actionsはpushとpull_requestの両方で`npm test`を自動実行します。
-旗の規則・正規化・表記の往復・寸法・PNG配置・配色・HTML・辞書・READMEの表を検証します。
+旗の規則・正規化・表記の往復・寸法・PNG配置・配色・HTML・辞書・言語の切り替え・READMEの表を検証します。
 既存SVG素材104枚の無改変をSHA-256で検証し、full版52枚が生成スクリプトの出力と一致することも検証します。
 
 ---
@@ -433,9 +442,11 @@ dancingmen-cipherlab/                  # 「踊る人形」の暗号を体験す
 ├── CLAUDE.md                          # AI向けの開発ガイド
 ├── dancingmen-logic.js                # 画面に依存しない純粋なロジック
 ├── dancingmen-messages.js             # 画面の文言の辞書とフォーマッター
+├── i18n.js                            # 日本語・英語の切り替え（辞書はmessages側）
 ├── index.html                         # 暗号化・復号・置換表の3タブ
 ├── LICENSE                            # 本ツールのMITライセンス
 ├── package.json                       # 依存なしのnpm test定義
+├── README.en.md                       # 英語版のドキュメント
 ├── README.md                          # 本ドキュメント
 ├── script.js                          # 入力・タブ・描画・PNG保存・モーダル
 ├── style.css                          # CSS変数の配色とレスポンシブレイアウト
@@ -444,6 +455,7 @@ dancingmen-cipherlab/                  # 「踊る人形」の暗号を体験す
 │   ├── contrast.test.js               # 文字色と面のコントラストを検証
 │   ├── format.test.js                 # 行長と読みやすさを検証
 │   ├── html.test.js                   # CSP・ARIA・インライン属性なしを検証
+│   ├── i18n.test.js                   # 辞書の対応・data-i18n・切り替えを検証
 │   ├── layout.test.js                 # 人形の寸法・viewBoxの拡張・PNG配置を検証
 │   ├── logic.test.js                  # 正規化・旗の規則・表記変換・往復を検証
 │   ├── messages.test.js               # 文言の辞書と画面側のキーを検証

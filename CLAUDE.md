@@ -30,9 +30,12 @@ This project uses static HTML, CSS, and classic JavaScript. No build, npm instal
    - `padded/`: With margins for individual character examination
    - `full/`: Generated root viewBox expansion, used by both text displays and PNG export
 5. **dancingmen-logic.js**: DOM-independent functions, exposed through globalThis.DancingMenLogic and CommonJS
-6. **dancingmen-messages.js**: Japanese dictionary and formatter, exposed through globalThis and CommonJS
-7. **test/**: Logic, samples, SVG integrity, layout, messages, HTML, contrast, formatting, static code, and README tests
-8. **tools/build-full-svg.js**: Dependency-free Node generator, not used by the browser
+6. **dancingmen-messages.js**: Japanese and English dictionaries sharing one set of keys, plus the formatter,
+   exposed through globalThis and CommonJS. It must stay free of DOM, storage and network references
+7. **i18n.js**: Language selection (query string, localStorage, browser setting), `data-i18n` application and the
+   `languagechange` event. It is the only file that touches localStorage
+8. **test/**: Logic, samples, SVG integrity, layout, messages, i18n, HTML, contrast, formatting, static code, and README tests
+9. **tools/build-full-svg.js**: Dependency-free Node generator, not used by the browser
 
 ### Key Architectural Decisions
 
@@ -49,7 +52,10 @@ This project uses static HTML, CSS, and classic JavaScript. No build, npm instal
 
 4. **Event-Driven UI**: No inline handlers or styles. Decryption uses a token-line array rather than reading state from the DOM.
    Tabs use roving tabindex and ArrowLeft/ArrowRight/Home/End without hard-coding the number of tabs.
-   The substitution table is built once. Only its buttons open the native dialog; Escape and close restore focus.
+   The substitution table, the decryption buttons and the sample list are rebuilt whenever the language changes;
+   only the table's buttons open the native dialog, and Escape or close restores focus.
+   Status messages are held as `{ key, values }` in `statusMessages` and translated when drawn, so switching the
+   language re-renders them instead of wiping them.
 
 ### Cipher Implementation
 
@@ -81,9 +87,16 @@ but PNG export deliberately shows the local-server guidance instead. Chromium on
 Clipboard absence or rejection is handled as a status message, without execCommand fallback.
 Keep the meta CSP, no-referrer policy, and noopener noreferrer links. Meta CSP does not provide frame-ancestors protection.
 
-### Japanese-First Design
+### Bilingual UI (Japanese and English)
 
-The UI is Japanese. All dynamically displayed text, alt/title/aria labels, and messages must go through `t(key, values)`
-and dancingmen-messages.js. The formatter rejects unknown keys and missing values. Do not add Japanese string literals to
-script.js or dancingmen-logic.js. English dictionaries and a language switch are deferred to a later iteration.
-Static HTML text may remain Japanese. Keep the README's sample/rule tables, file tree, and screenshots consistent with the code.
+Japanese is the default and English is a peer, not an afterthought. Every phrase lives in dancingmen-messages.js under a
+key that both dictionaries define, and every dynamically displayed text, alt/title/aria label and status message goes
+through `t(key, values)`. The formatter rejects unknown keys and missing values.
+
+- Static markup carries `data-i18n`, `data-i18n-aria-label`, `data-i18n-placeholder`, `data-i18n-title` or `data-i18n-alt`.
+  `apply()` replaces `textContent`, so an element with child elements never takes `data-i18n`; wrap its parts in spans
+- Never branch on displayed text. Use `dataset` marks or the shape of the value instead
+- Do not add Japanese string literals to script.js or dancingmen-logic.js; the dictionary is the only home for wording
+- The `noscript` message is bilingual, because no script can translate it
+- `test/i18n.test.js` locks the key sets, the placeholder names, the load order and the status-message pattern
+- Keep both READMEs, the sample/rule tables, the file tree and the screenshots consistent with the code
