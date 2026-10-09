@@ -81,3 +81,17 @@ test("README obsolete claims and non-existent code examples are absent", () => {
     assert.ok(!readme.includes(obsolete), obsolete);
   }
 });
+
+test("ユースケースの「このツールならではの使い方」を dancingmen-logic.js で再計算（日英）", () => {
+  const { encryptText, LETTERS } = require("../dancingmen-logic.js");
+  const en = fs.readFileSync(path.join(root, "README.en.md"), "utf8");
+  const hello = encryptText("HELLO")[0];
+  assert.deepEqual(hello.map((t) => t.letter), ["H", "E", "L", "L", "O"]);
+  assert.equal(hello[2].letter, hello[3].letter);
+  assert.equal(hello.filter((t) => t.letter === "L").length, 2);
+  const hw = encryptText("HELLO WORLD")[0];
+  assert.equal(hw[4].letter, "O");
+  assert.equal(hw[4].flag, true);
+  assert.equal(LETTERS.length, 26);
+  for (const md of [readme, en]) assert.ok(md.includes("HELLO WORLD") && md.includes("26"));
+});
