@@ -210,6 +210,20 @@ the substitution table, the sample list and the status messages together.
 
 ---
 
+## 🎯 Use cases
+
+### Ways of using this tool in particular
+
+- Confirming that it is a simple substitution despite the figures (frequency-analysis classes): each letter maps to one dancing figure. Encrypting HELLO makes the same "L" the same figure twice, so repeated letters appear as repeated figures. Behind the exotic look it is a simple substitution, and you can confirm that counting the figures lets frequency analysis work
+- Confirming that a flag marks word boundaries and leaks word lengths (cryptanalysis classes): the last figure of each word carries a flag. Encrypting HELLO WORLD raises a flag on the O at the end of the first word (the 5th letter). You can confirm that showing word breaks with a flag leaks the clue of word length and helps decryption (the same idea by which Sherlock Holmes started from short words)
+- Confirming that all 26 letters map one to one to figures (substitution classes): each of the 26 letters of the alphabet is assigned one fixed figure. Since letters and figures are one to one, you can always turn a figure back into its letter. Behind the pictures it is a fixed substitution table with no key
+
+### General uses
+
+- Learn how the Dancing Men cipher (Sherlock Holmes) works in class or self-study
+- Make figure ciphertext (SVG or image) to hand out at puzzles and events
+- Use it as a subject for frequency analysis of a simple substitution cipher
+
 ## 🔒 Security and privacy
 
 - A meta CSP allows scripts, styles and images from the same origin only. No inline handler and no `style` attribute is used
